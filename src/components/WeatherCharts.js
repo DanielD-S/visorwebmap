@@ -1,9 +1,8 @@
 import React, { useEffect } from 'react';
 import { Chart } from 'chart.js/auto';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
 
-/**
- * Calcula promedio, mínimo y máximo
- */
 function computeStats(data) {
   const validData = data.filter(d => typeof d === 'number' && !isNaN(d));
   const sum = validData.reduce((a, b) => a + b, 0);
@@ -13,14 +12,8 @@ function computeStats(data) {
   return { avg, min, max };
 }
 
-/**
- * Exporta CSV de un gráfico individual
- */
-function exportSingleChartCSV(dataset, variableKey) {
-  const rows = [
-    ['Fecha', dataset.config.label]
-  ];
-
+function exportSingleChartCSV(dataset) {
+  const rows = [['Fecha', dataset.config.label]];
   for (let i = 0; i < dataset.labels.length; i++) {
     rows.push([dataset.labels[i], dataset.data[i]]);
   }
@@ -29,11 +22,40 @@ function exportSingleChartCSV(dataset, variableKey) {
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);
-  const filename = dataset.config.label.replace(/\s+/g, '_') + '.csv';
-  link.setAttribute('download', filename);
+  link.setAttribute('download', dataset.config.label.replace(/\s+/g, '_') + '.csv');
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+}
+
+function exportSingleChartExcel(dataset) {
+  const wsData = [['Fecha', dataset.config.label]];
+  for (let i = 0; i < dataset.labels.length; i++) {
+    wsData.push([dataset.labels[i], dataset.data[i]]);
+  }
+
+  const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Datos');
+  const filename = dataset.config.label.replace(/\s+/g, '_') + '.xlsx';
+  XLSX.writeFile(workbook, filename);
+}
+
+function exportChartAsImage(canvasId, label) {
+  const canvas = document.getElementById(canvasId);
+  const link = document.createElement('a');
+  link.download = label.replace(/\s+/g, '_') + '.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+
+function exportChartAsPDF(canvasId, label) {
+  const canvas = document.getElementById(canvasId);
+  const imgData = canvas.toDataURL('image/png');
+  const pdf = new jsPDF();
+  pdf.text(label, 15, 20);
+  pdf.addImage(imgData, 'PNG', 15, 30, 180, 90);
+  pdf.save(label.replace(/\s+/g, '_') + '.pdf');
 }
 
 function WeatherCharts({ chartsData }) {
@@ -101,24 +123,47 @@ function WeatherCharts({ chartsData }) {
     <div className="charts-container">
       {Object.entries(chartsData).map(([variable, dataset]) => {
         const stats = computeStats(dataset.data);
+        const canvasId = `chart-${variable}`;
 
         return (
-          <div className="chart-wrapper" key={variable}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-              <div style={{ fontSize: '14px', color: '#34495e' }}>
+          <div className="mb-5" key={variable}>
+            <div className="d-flex justify-content-between align-items-center mb-2">
+              <div className="text-muted small">
                 <strong>{dataset.config.label}</strong><br />
-                Promedio: {stats.avg.toFixed(1)} {dataset.config.unit} | 
-                Mín: {stats.min} | 
-                Máx: {stats.max}
+                Promedio: {stats.avg.toFixed(1)} {dataset.config.unit} | Mín: {stats.min} | Máx: {stats.max}
               </div>
-              <button
-                onClick={() => exportSingleChartCSV(dataset, variable)}
-                style={{ fontSize: '13px', padding: '6px 10px', background: '#3498db', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
-              >
-                📥 CSV
-              </button>
+
+              <div className="btn-group btn-group-sm">
+                <button
+                  onClick={() => exportSingleChartCSV(dataset)}
+                  className="btn btn-outline-secondary"
+                >
+                  📄 CSV
+                </button>
+                <button
+                  onClick={() => exportSingleChartExcel(dataset)}
+                  className="btn btn-outline-success"
+                >
+                  📊 Excel
+                </button>
+                <button
+                  onClick={() => exportChartAsImage(canvasId, dataset.config.label)}
+                  className="btn btn-outline-info"
+                >
+                  🖼 PNG
+                </button>
+                <button
+                  onClick={() => exportChartAsPDF(canvasId, dataset.config.label)}
+                  className="btn btn-outline-danger"
+                >
+                  📄 PDF
+                </button>
+              </div>
             </div>
-            <canvas id={`chart-${variable}`}></canvas>
+
+            <div className="border rounded shadow-sm p-3 bg-white">
+              <canvas id={canvasId} height="200"></canvas>
+            </div>
           </div>
         );
       })}
