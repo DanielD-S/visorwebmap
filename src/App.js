@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
-import { Chart } from 'chart.js/auto';
 import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';
+import WeatherForm from './components/WeatherForm';
+import WeatherCharts from './components/WeatherCharts';
 
 function App() {
   const [selectedId, setSelectedId] = useState('');
@@ -19,16 +20,7 @@ function App() {
     setEndDate(today.toISOString().split('T')[0]);
   }, []);
 
-  useEffect(() => {
-    if (selectedId) {
-      const coord = coordinates.find(c => c.id === selectedId);
-      if (coord) {
-        setLatitude(coord.lat);
-        setLongitude(coord.long);
-        fetchWeatherData(coord.lat, coord.long);
-      }
-    }
-  }, [selectedId]);
+  
 
   const calculateStartDate = (end, days) => {
     const endDate = new Date(end);
@@ -38,10 +30,8 @@ function App() {
   };
 
   const fetchWeatherData = async (lat, lon) => {
-    if (!endDate || daysBack < 7 || daysBack > 56) return;
     setLoading(true);
     setError('');
-
     const startDate = calculateStartDate(endDate, daysBack);
     const variables = Object.keys(WEATHER_VARIABLES).join(',');
     const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
@@ -49,8 +39,14 @@ function App() {
     try {
       const res = await fetch(url);
       const data = await res.json();
-      const processed = processChartData(data);
-      setChartsData(processed);
+
+      if (data && data.daily && data.daily.time) {
+        const processed = processChartData(data);
+        setChartsData(processed);
+      } else {
+        setChartsData({});
+        setError('La API no devolvió datos válidos para esta ubicación o rango de fechas.');
+      }
     } catch (err) {
       setError('Error al obtener datos');
     } finally {
@@ -75,93 +71,52 @@ function App() {
     return datasets;
   };
 
-  useEffect(() => {
-    Object.entries(chartsData).forEach(([key, dataset]) => {
-      const canvasId = `chart-${key}`;
-      const canvas = document.getElementById(canvasId);
-      if (canvas) {
-        new Chart(canvas, {
-          type: 'bar',
-          data: {
-            labels: dataset.labels,
-            datasets: [{
-              label: dataset.config.label,
-              data: dataset.data,
-              backgroundColor: dataset.config.color,
-              borderColor: dataset.config.color.replace('0.8', '1.0'),
-              borderWidth: 1
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              title: {
-                display: true,
-                text: `${dataset.config.label} ${dataset.config.unit}`,
-                font: { size: 16, weight: 'bold' }
-              },
-              legend: { display: false }
-            },
-            scales: {
-              y: { beginAtZero: true, title: { display: true, text: dataset.config.unit } },
-              x: { title: { display: true, text: 'Fecha' } }
-            }
-          }
-        });
-      }
-    });
-  }, [chartsData]);
-
   return (
     <div className="container">
       <h1>Visualizador Climático</h1>
-      <div className="form-container">
-        <div className="form-row">
-          <div className="form-group">
-            <label>Ubicación predefinida:</label>
-            <select value={selectedId} onChange={e => setSelectedId(e.target.value)}>
-              <option value="">Seleccionar ubicación...</option>
-              {coordinates.map(coord => (
-                <option key={coord.id} value={coord.id}>{coord.id}</option>
-              ))}
-            </select>
-          </div>
-        </div>
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Latitud:</label>
-            <input type="text" value={latitude} disabled />
-          </div>
-          <div className="form-group">
-            <label>Longitud:</label>
-            <input type="text" value={longitude} disabled />
-          </div>
-        </div>
+      <WeatherForm
+        selectedId={selectedId}
+        setSelectedId={setSelectedId}
+        latitude={latitude}
+        longitude={longitude}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        daysBack={daysBack}
+        setDaysBack={setDaysBack}
+        coordinates={coordinates}
+      />
+      <div className="form-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
+        <button
+          onClick={() => {
+            const coord = coordinates.find(c => c.id === selectedId);
+            const today = new Date().toISOString().split('T')[0];
 
-        <div className="form-row">
-          <div className="form-group">
-            <label>Fecha final:</label>
-            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
-          </div>
-          <div className="form-group">
-            <label>Días hacia atrás:</label>
-            <input type="number" value={daysBack} min="7" max="56" onChange={e => setDaysBack(Number(e.target.value))} />
-          </div>
-        </div>
+            if (!coord || !endDate || daysBack < 7 || daysBack > 56) {
+              setError('Verifica que todos los campos estén completos y correctos.');
+              return;
+            }
+
+            if (endDate > today) {
+              setError('No puedes consultar fechas futuras.');
+              return;
+            }
+
+            setLatitude(coord.lat);
+            setLongitude(coord.long);
+            fetchWeatherData(coord.lat, coord.long);
+          }}
+          className="btn btn-primary"
+          disabled={loading || !selectedId || !endDate || daysBack < 7 || daysBack > 56}
+        >
+          {loading ? 'Cargando...' : 'Consultar datos climáticos'}
+        </button>
       </div>
 
       {loading && <div className="loading">Cargando datos climáticos...</div>}
       {error && <div className="error">{error}</div>}
 
-      <div className="charts-container">
-        {Object.keys(chartsData).map(variable => (
-          <div className="chart-wrapper" key={variable}>
-            <canvas id={`chart-${variable}`}></canvas>
-          </div>
-        ))}
-      </div>
+      <WeatherCharts chartsData={chartsData} />
     </div>
   );
 }
