@@ -4,6 +4,7 @@ import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';
 import WeatherForm from './components/WeatherForm';
 import WeatherCharts from './components/WeatherCharts';
+import WeatherMap from './components/WeatherMap';
 
 function App() {
   const [selectedId, setSelectedId] = useState('');
@@ -19,8 +20,6 @@ function App() {
     const today = new Date();
     setEndDate(today.toISOString().split('T')[0]);
   }, []);
-
-  
 
   const calculateStartDate = (end, days) => {
     const endDate = new Date(end);
@@ -71,6 +70,25 @@ function App() {
     return datasets;
   };
 
+  const handleClick = () => {
+    const coord = coordinates.find(c => c.id === selectedId);
+    const today = new Date().toISOString().split('T')[0];
+
+    if (!coord || !endDate || daysBack < 7 || daysBack > 56) {
+      setError('Verifica que todos los campos estén completos y correctos.');
+      return;
+    }
+
+    if (endDate > today) {
+      setError('No puedes consultar fechas futuras.');
+      return;
+    }
+
+    setLatitude(coord.lat);
+    setLongitude(coord.long);
+    fetchWeatherData(coord.lat, coord.long);
+  };
+
   return (
     <div className="container">
       <h1>Visualizador Climático</h1>
@@ -86,26 +104,10 @@ function App() {
         setDaysBack={setDaysBack}
         coordinates={coordinates}
       />
+
       <div className="form-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
         <button
-          onClick={() => {
-            const coord = coordinates.find(c => c.id === selectedId);
-            const today = new Date().toISOString().split('T')[0];
-
-            if (!coord || !endDate || daysBack < 7 || daysBack > 56) {
-              setError('Verifica que todos los campos estén completos y correctos.');
-              return;
-            }
-
-            if (endDate > today) {
-              setError('No puedes consultar fechas futuras.');
-              return;
-            }
-
-            setLatitude(coord.lat);
-            setLongitude(coord.long);
-            fetchWeatherData(coord.lat, coord.long);
-          }}
+          onClick={handleClick}
           className="btn btn-primary"
           disabled={loading || !selectedId || !endDate || daysBack < 7 || daysBack > 56}
         >
@@ -116,7 +118,8 @@ function App() {
       {loading && <div className="loading">Cargando datos climáticos...</div>}
       {error && <div className="error">{error}</div>}
 
-      <WeatherCharts chartsData={chartsData} />
+      <WeatherMap lat={latitude} lon={longitude} id={selectedId} />
+      $1
     </div>
   );
 }
