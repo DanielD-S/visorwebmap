@@ -123,13 +123,20 @@ function LoadKMLFromFile({ file }) {
       map.removeLayer(layerRef.current);
     }
 
-    const layer = window.omnivore.kml(blobUrl)
-      .on('ready', function () {
-        map.fitBounds(layer.getBounds());
-      })
-      .addTo(map);
+    try {
+      const layer = window.omnivore.kml(blobUrl)
+        .on('ready', function () {
+          map.fitBounds(layer.getBounds());
+        })
+        .on('error', function () {
+          alert('Error al cargar el archivo KML. Asegúrate de que esté bien formado.');
+        })
+        .addTo(map);
 
-    layerRef.current = layer;
+      layerRef.current = layer;
+    } catch (error) {
+      alert('Archivo KML inválido o corrupto.');
+    }
 
     return () => {
       if (layerRef.current) {
@@ -145,7 +152,10 @@ function LoadKMLFromFile({ file }) {
 function WeatherMap({ lat, lon, id }) {
   const [kmlFile, setKmlFile] = useState(null);
 
-  if (!lat || !lon) return null;
+  const parsedLat = parseFloat(lat);
+  const parsedLon = parseFloat(lon);
+
+  if (!parsedLat || !parsedLon) return null;
 
   return (
     <div style={{ height: '550px', marginTop: '20px' }}>
@@ -156,7 +166,7 @@ function WeatherMap({ lat, lon, id }) {
         style={{ marginBottom: '10px' }}
       />
 
-      <MapContainer center={[lat, lon]} zoom={14} style={{ height: '100%', width: '100%' }}>
+      <MapContainer center={[parsedLat, parsedLon]} zoom={14} style={{ height: '100%', width: '100%' }}>
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="🗺 OpenStreetMap">
             <TileLayer
@@ -180,7 +190,7 @@ function WeatherMap({ lat, lon, id }) {
           </LayersControl.BaseLayer>
         </LayersControl>
 
-        <Marker position={[lat, lon]} icon={redIcon}>
+        <Marker position={[parsedLat, parsedLon]} icon={redIcon}>
           <Popup>Torre seleccionada: {id}</Popup>
         </Marker>
 
@@ -192,8 +202,8 @@ function WeatherMap({ lat, lon, id }) {
           )
         ))}
 
-        <MapUpdater lat={lat} lon={lon} />
-        <ResetViewControl lat={lat} lon={lon} />
+        <MapUpdater lat={parsedLat} lon={parsedLon} />
+        <ResetViewControl lat={parsedLat} lon={parsedLon} />
         <LegendControl />
         <LoadKMLFromFile file={kmlFile} />
       </MapContainer>
