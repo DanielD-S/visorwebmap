@@ -1,9 +1,5 @@
 # 🌤️ Visor Meteorológico
 
-Este proyecto es un visor meteorológico interactivo desarrollado en **React**, con visualización de mapas mediante **React Leaflet** y gráficos climáticos diarios basados en datos de la API de **Open-Meteo**.
-
----
-
 ## 🚀 Funcionalidades principales
 
 - Selección de torre meteorológica desde una lista desplegable
@@ -72,22 +68,3 @@ npm run deploy
 │   ├── coordinates.js
 │   └── weatherVariables.js
 ```
-
----
-
-## 🧪 Consideraciones futuras
-
-- Soporte para archivos `.kmz` (requiere descompresión)
-- Exportación de gráficos o datos a PDF/CSV
-- Capas WMS adicionales para análisis espacial
-- Interfaz más amigable para móviles
-
----
-
-## 📬 Contacto
-
-Proyecto desarrollado por [@DanielD-S](https://github.com/DanielD-S) usando solo tecnologías open source 💚
-
----
-
-¡Gracias por visitar el visor! 🌦️
