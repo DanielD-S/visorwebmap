@@ -9,8 +9,8 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import 'leaflet-omnivore';
 import { coordinates } from '../data/coordinates';
+import { kml } from '@tmcw/togeojson';
 
 // Configura íconos personalizados
 const blueIcon = new L.Icon({
@@ -23,7 +23,7 @@ const blueIcon = new L.Icon({
 });
 
 const redIcon = new L.Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-red.png',
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -93,7 +93,7 @@ function LegendControl() {
 
       div.innerHTML = `
         <strong>Leyenda</strong><br />
-        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
+        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
         <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres
       `;
 
@@ -117,31 +117,29 @@ function LoadKMLFromFile({ file }) {
   useEffect(() => {
     if (!file) return;
 
-    const blobUrl = URL.createObjectURL(file);
-
-    if (layerRef.current) {
-      map.removeLayer(layerRef.current);
-    }
-
-    try {
-      const layer = window.omnivore.kml(blobUrl)
-        .on('ready', function () {
-          map.fitBounds(layer.getBounds());
-        })
-        .on('error', function () {
-          alert('Error al cargar el archivo KML. Asegúrate de que esté bien formado.');
-        })
-        .addTo(map);
-
-      layerRef.current = layer;
-    } catch (error) {
-      alert('Archivo KML inválido o corrupto.');
-    }
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const parser = new DOMParser();
+        const kmlText = e.target.result;
+        const kmlDom = parser.parseFromString(kmlText, 'text/xml');
+        const converted = kml(kmlDom);
+        if (layerRef.current) {
+          map.removeLayer(layerRef.current);
+        }
+        const geojsonLayer = L.geoJSON(converted);
+        geojsonLayer.addTo(map);
+        map.fitBounds(geojsonLayer.getBounds());
+        layerRef.current = geojsonLayer;
+      } catch (error) {
+        alert('Archivo KML inválido o corrupto.');
+      }
+    };
+    reader.readAsText(file);
 
     return () => {
       if (layerRef.current) {
         map.removeLayer(layerRef.current);
-        URL.revokeObjectURL(blobUrl);
       }
     };
   }, [file, map]);
