@@ -184,14 +184,21 @@ function WeatherMap({ lat, lon, id }) {
           type="file"
           accept=".kml,.geojson"
           onChange={(e) => setKmlFile(e.target.files[0])}
+          style={{ marginRight: '10px' }}
         />
         {kmlFile && (
-          <div style={{ marginTop: '5px', fontSize: '14px' }}>
-            Archivo cargado: <strong>{kmlFile.name}</strong>
-          </div>
+          <>
+            <span style={{ fontSize: '14px' }}>Archivo cargado: <strong>{kmlFile.name}</strong></span>
+            <button
+              onClick={() => setKmlFile(null)}
+              className="btn btn-sm btn-outline-danger"
+              style={{ marginLeft: '10px' }}
+            >
+              Quitar archivo
+            </button>
+          </>
         )}
       </div>
-      />
 
       <MapContainer center={[parsedLat, parsedLon]} zoom={14} style={{ height: '100%', width: '100%' }}>
         <LayersControl position="topright">
