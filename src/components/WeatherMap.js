@@ -78,6 +78,38 @@ function ResetViewControl({ lat, lon }) {
   return null;
 }
 
+function LegendControl() {
+  const map = useMap();
+
+  useEffect(() => {
+    const legend = L.control({ position: 'bottomright' });
+
+    legend.onAdd = () => {
+      const div = L.DomUtil.create('div', 'info legend');
+      div.style.background = 'white';
+      div.style.padding = '10px';
+      div.style.fontSize = '14px';
+      div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
+
+      div.innerHTML = `
+        <strong>Leyenda</strong><br />
+        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
+        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres
+      `;
+
+      return div;
+    };
+
+    legend.addTo(map);
+
+    return () => {
+      legend.remove();
+    };
+  }, [map]);
+
+  return null;
+}
+
 function LoadKMLFromFile({ file }) {
   const map = useMap();
   const layerRef = useRef(null);
@@ -162,6 +194,7 @@ function WeatherMap({ lat, lon, id }) {
 
         <MapUpdater lat={lat} lon={lon} />
         <ResetViewControl lat={lat} lon={lon} />
+        <LegendControl />
         <LoadKMLFromFile file={kmlFile} />
       </MapContainer>
     </div>
