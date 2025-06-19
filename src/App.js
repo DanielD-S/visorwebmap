@@ -17,7 +17,7 @@ function App() {
   const [chartsData, setChartsData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [kmlFile, setKmlFile] = useState(null); // NUEVO: estado para archivo
+  const [kmlFile, setKmlFile] = useState(null);
 
   useEffect(() => {
     const today = new Date();
@@ -62,7 +62,6 @@ function App() {
     );
 
     const datasets = {};
-
     Object.keys(WEATHER_VARIABLES).forEach(variable => {
       if (data.daily[variable]) {
         datasets[variable] = {
@@ -96,8 +95,8 @@ function App() {
   };
 
   return (
-    <div className="container">
-      <h1>Visualizador Climático</h1>
+    <div className="container my-4">
+      <h1 className="text-center mb-4">Visualizador Climático</h1>
 
       <WeatherForm
         selectedId={selectedId}
@@ -111,7 +110,7 @@ function App() {
         coordinates={coordinates}
       />
 
-      <div className="form-row" style={{ justifyContent: 'center', marginTop: '20px' }}>
+      <div className="d-flex justify-content-center mt-3">
         <button
           onClick={handleClick}
           className="btn btn-primary"
@@ -121,36 +120,40 @@ function App() {
         </button>
       </div>
 
-      {loading && <div className="loading">Cargando datos climáticos...</div>}
-      {error && <div className="error">{error}</div>}
+      {loading && <div className="text-center text-muted mt-3">Cargando datos climáticos...</div>}
+      {error && <div className="alert alert-danger mt-3 text-center">{error}</div>}
 
       {Object.keys(chartsData).length > 0 && (
-        <section className="results-section">
-          <h2>Resultados</h2>
+        <section className="mt-5">
+          <h2 className="mb-3">Resultados</h2>
 
-          {/* Subida de archivo KML */}
-          <div className="kml-uploader" style={{ marginBottom: '20px' }}>
-            <input
-              type="file"
-              accept=".kml,.geojson"
-              onChange={(e) => setKmlFile(e.target.files[0])}
-              style={{ marginRight: '10px' }}
-            />
-            {kmlFile && (
-              <>
-                <span style={{ fontSize: '14px' }}>Archivo cargado: <strong>{kmlFile.name}</strong></span>
-                <button
-                  onClick={() => setKmlFile(null)}
-                  className="btn btn-sm btn-outline-danger"
-                  style={{ marginLeft: '10px' }}
-                >
-                  Quitar archivo
-                </button>
-              </>
-            )}
+          {/* Input de archivo KML/GeoJSON */}
+          <div className="card p-3 mb-4">
+            <div className="d-flex align-items-center flex-wrap gap-3">
+              <input
+                type="file"
+                accept=".kml,.geojson"
+                onChange={(e) => setKmlFile(e.target.files[0])}
+                className="form-control"
+                style={{ maxWidth: '300px' }}
+              />
+              {kmlFile && (
+                <>
+                  <span className="text-muted small">
+                    Archivo cargado: <strong>{kmlFile.name}</strong>
+                  </span>
+                  <button
+                    onClick={() => setKmlFile(null)}
+                    className="btn btn-sm btn-outline-danger"
+                  >
+                    Quitar archivo
+                  </button>
+                </>
+              )}
+            </div>
           </div>
 
-          <div className="map-container">
+          <div className="mb-4">
             <WeatherMap lat={latitude} lon={longitude} id={selectedId} file={kmlFile} />
           </div>
 

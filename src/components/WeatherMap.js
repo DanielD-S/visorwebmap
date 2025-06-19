@@ -12,6 +12,7 @@ import L from 'leaflet';
 import { coordinates } from '../data/coordinates';
 import { kml } from '@tmcw/togeojson';
 
+// Íconos personalizados
 const blueIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -30,6 +31,7 @@ const redIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
+// Centrado automático al cambiar coordenadas
 function MapUpdater({ lat, lon }) {
   const map = useMap();
   useEffect(() => {
@@ -40,6 +42,7 @@ function MapUpdater({ lat, lon }) {
   return null;
 }
 
+// Botón de reinicio de vista
 function ResetViewControl({ lat, lon }) {
   const map = useMap();
   useEffect(() => {
@@ -50,19 +53,22 @@ function ResetViewControl({ lat, lon }) {
       div.style.padding = '5px';
       div.style.cursor = 'pointer';
       div.style.fontSize = '18px';
-      div.innerHTML = '🔄';
       div.title = 'Restablecer vista';
+      div.innerHTML = '🔄';
       div.onclick = () => {
-        if (lat && lon) map.setView([lat, lon], 14);
+        if (lat && lon) {
+          map.setView([lat, lon], 14);
+        }
       };
       return div;
     };
     button.addTo(map);
-    return () => { button.remove(); };
+    return () => button.remove();
   }, [lat, lon, map]);
   return null;
 }
 
+// Leyenda
 function LegendControl() {
   const map = useMap();
   useEffect(() => {
@@ -81,11 +87,12 @@ function LegendControl() {
       return div;
     };
     legend.addTo(map);
-    return () => { legend.remove(); };
+    return () => legend.remove();
   }, [map]);
   return null;
 }
 
+// Carga de KML o GeoJSON
 function LoadKMLFromFile({ file }) {
   const map = useMap();
   const layerRef = useRef(null);
@@ -105,8 +112,7 @@ function LoadKMLFromFile({ file }) {
     reader.onload = function (e) {
       try {
         const text = e.target.result;
-        const layer = layerRef.current;
-        if (layer) map.removeLayer(layer);
+        if (layerRef.current) map.removeLayer(layerRef.current);
 
         if (isGeoJSON(text)) {
           const geojson = JSON.parse(text);
@@ -122,7 +128,6 @@ function LoadKMLFromFile({ file }) {
         const geojsonLayer = L.geoJSON(converted).addTo(map);
         map.fitBounds(geojsonLayer.getBounds());
         layerRef.current = geojsonLayer;
-
       } catch {
         alert('Archivo inválido o corrupto (KML o GeoJSON).');
       }
@@ -137,6 +142,7 @@ function LoadKMLFromFile({ file }) {
   return null;
 }
 
+// Componente principal
 function WeatherMap({ lat, lon, id, file }) {
   const parsedLat = parseFloat(lat);
   const parsedLon = parseFloat(lon);
@@ -169,10 +175,12 @@ function WeatherMap({ lat, lon, id, file }) {
           </LayersControl.BaseLayer>
         </LayersControl>
 
+        {/* Torre seleccionada */}
         <Marker position={[parsedLat, parsedLon]} icon={redIcon}>
           <Popup>Torre seleccionada: {id}</Popup>
         </Marker>
 
+        {/* Otras torres */}
         {coordinates.map(coord => (
           coord.id !== id && (
             <Marker key={coord.id} position={[coord.lat, coord.long]} icon={blueIcon}>
