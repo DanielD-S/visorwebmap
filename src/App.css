@@ -93,3 +93,15 @@ select:focus {
 canvas {
   height: 240px !important;
 }
+
+
+.results-section {
+  margin-top: 40px;
+  border-top: 1px solid #ccc;
+  padding-top: 30px;
+}
+
+.results-section h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}

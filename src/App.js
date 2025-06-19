@@ -56,7 +56,10 @@ function App() {
   };
 
   const processChartData = (data) => {
-    const dates = data.daily.time.map(date => new Date(date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' }));
+    const dates = data.daily.time.map(date =>
+      new Date(date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
+    );
+
     const datasets = {};
 
     Object.keys(WEATHER_VARIABLES).forEach(variable => {
@@ -120,13 +123,15 @@ function App() {
       {loading && <div className="loading">Cargando datos climáticos...</div>}
       {error && <div className="error">{error}</div>}
 
-     {Object.keys(chartsData).length > 0 && (
-  <>
-    <WeatherMap lat={latitude} lon={longitude} id={selectedId} />
-    <WeatherCharts chartsData={chartsData} />
-  </>
-)}
-
+      {Object.keys(chartsData).length > 0 && (
+        <section className="results-section">
+          <h2>Resultados</h2>
+          <div className="map-container">
+            <WeatherMap lat={latitude} lon={longitude} id={selectedId} />
+          </div>
+          <WeatherCharts chartsData={chartsData} />
+        </section>
+      )}
     </div>
   );
 }
