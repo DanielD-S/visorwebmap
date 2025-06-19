@@ -12,12 +12,23 @@ import L from 'leaflet';
 import 'leaflet-omnivore';
 import { coordinates } from '../data/coordinates';
 
-// Configura íconos
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+// Configura íconos personalizados
+const blueIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png'
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+const redIcon = new L.Icon({
+  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-red.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
 });
 
 function MapUpdater({ lat, lon }) {
@@ -74,26 +85,26 @@ function LoadKMLFromFile({ file }) {
   useEffect(() => {
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      const contents = e.target.result;
-      const parser = new DOMParser();
-      const kml = parser.parseFromString(contents, 'text/xml');
+    const blobUrl = URL.createObjectURL(file);
 
+    if (layerRef.current) {
+      map.removeLayer(layerRef.current);
+    }
+
+    const layer = window.omnivore.kml(blobUrl)
+      .on('ready', function () {
+        map.fitBounds(layer.getBounds());
+      })
+      .addTo(map);
+
+    layerRef.current = layer;
+
+    return () => {
       if (layerRef.current) {
         map.removeLayer(layerRef.current);
+        URL.revokeObjectURL(blobUrl);
       }
-
-      const layer = window.omnivore.kml.parse(kml)
-        .on('ready', function () {
-          map.fitBounds(layer.getBounds());
-        })
-        .addTo(map);
-
-      layerRef.current = layer;
     };
-
-    reader.readAsText(file);
   }, [file, map]);
 
   return null;
@@ -137,14 +148,16 @@ function WeatherMap({ lat, lon, id }) {
           </LayersControl.BaseLayer>
         </LayersControl>
 
-        <Marker position={[lat, lon]}>
+        <Marker position={[lat, lon]} icon={redIcon}>
           <Popup>Torre seleccionada: {id}</Popup>
         </Marker>
 
         {coordinates.map(coord => (
-          <Marker key={coord.id} position={[coord.lat, coord.long]}>
-            <Popup>{coord.id}</Popup>
-          </Marker>
+          coord.id !== id && (
+            <Marker key={coord.id} position={[coord.lat, coord.long]} icon={blueIcon}>
+              <Popup>{coord.id}</Popup>
+            </Marker>
+          )
         ))}
 
         <MapUpdater lat={lat} lon={lon} />
