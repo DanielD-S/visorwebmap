@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
+
 import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';
 import WeatherForm from './components/WeatherForm';

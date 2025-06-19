@@ -3,16 +3,19 @@ import { Chart } from 'chart.js/auto';
 
 function WeatherCharts({ chartsData }) {
   useEffect(() => {
+    // Limpieza: destruir todos los gráficos existentes antes de crear nuevos
+    Object.keys(Chart.instances || {}).forEach((key) => {
+      const chart = Chart.instances[key];
+      if (chart) chart.destroy();
+    });
+
     Object.entries(chartsData).forEach(([key, dataset]) => {
       const canvasId = `chart-${key}`;
       const canvas = document.getElementById(canvasId);
 
       if (canvas) {
-        // ✅ Evita superposición destruyendo gráfico anterior
         const existingChart = Chart.getChart(canvasId);
-        if (existingChart) {
-          existingChart.destroy();
-        }
+        if (existingChart) existingChart.destroy();
 
         new Chart(canvas, {
           type: 'bar',
@@ -57,6 +60,10 @@ function WeatherCharts({ chartsData }) {
       }
     });
   }, [chartsData]);
+
+  if (!chartsData || Object.keys(chartsData).length === 0) {
+    return null;
+  }
 
   return (
     <div className="charts-container">
