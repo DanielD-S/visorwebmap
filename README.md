@@ -1,70 +1,93 @@
-# Getting Started with Create React App
+# 🌤️ Visor Meteorológico
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Este proyecto es un visor meteorológico interactivo desarrollado en **React**, con visualización de mapas mediante **React Leaflet** y gráficos climáticos diarios basados en datos de la API de **Open-Meteo**.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## 🚀 Funcionalidades principales
 
-### `npm start`
+- Selección de torre meteorológica desde una lista desplegable
+- Consulta de datos climáticos históricos por fecha y cantidad de días hacia atrás
+- Visualización de mapas con diferentes basemaps
+- Marcador rojo para la torre consultada y azul para otras torres
+- Carga y visualización de archivos `.kml` y `.geojson` locales
+- Botón para quitar archivos cargados
+- Control para restablecer la vista del mapa
+- Leyenda visual de los íconos usados
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 🛠️ Tecnologías utilizadas
 
-### `npm test`
+- [React](https://reactjs.org/)
+- [React Leaflet](https://react-leaflet.js.org/)
+- [Leaflet](https://leafletjs.com/)
+- [Bootstrap](https://getbootstrap.com/)
+- [Chart.js](https://www.chartjs.org/) vía `react-chartjs-2`
+- [Open-Meteo API](https://open-meteo.com/)
+- [@tmcw/togeojson](https://github.com/tmcw/togeojson) para convertir archivos `.kml` a GeoJSON
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## 📦 Instalación local
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```bash
+# Clonar repositorio
+https://github.com/DanielD-S/visorwebmap.git
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Instalar dependencias
+npm install
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Iniciar servidor de desarrollo
+npm start
+```
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 🌍 Despliegue
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+El proyecto se despliega en GitHub Pages:
+🔗 https://danield-s.github.io/visorwebmap
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Para desplegar:
+```bash
+git add .
+git commit -m "Nueva funcionalidad o corrección"
+git push origin main
+npm run deploy
+```
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+---
 
-## Learn More
+## 📁 Estructura del proyecto
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+/src
+├── App.js
+├── components/
+│   ├── WeatherForm.js
+│   ├── WeatherCharts.js
+│   └── WeatherMap.js
+├── data/
+│   ├── coordinates.js
+│   └── weatherVariables.js
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+## 🧪 Consideraciones futuras
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+- Soporte para archivos `.kmz` (requiere descompresión)
+- Exportación de gráficos o datos a PDF/CSV
+- Capas WMS adicionales para análisis espacial
+- Interfaz más amigable para móviles
 
-### Analyzing the Bundle Size
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## 📬 Contacto
 
-### Making a Progressive Web App
+Proyecto desarrollado por [@DanielD-S](https://github.com/DanielD-S) usando solo tecnologías open source 💚
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+---
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+¡Gracias por visitar el visor! 🌦️
