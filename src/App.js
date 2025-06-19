@@ -118,8 +118,13 @@ function App() {
       {loading && <div className="loading">Cargando datos climáticos...</div>}
       {error && <div className="error">{error}</div>}
 
-      <WeatherMap lat={latitude} lon={longitude} id={selectedId} />
-      $1
+     {Object.keys(chartsData).length > 0 && (
+  <>
+    <WeatherMap lat={latitude} lon={longitude} id={selectedId} />
+    <WeatherCharts chartsData={chartsData} />
+  </>
+)}
+
     </div>
   );
 }
