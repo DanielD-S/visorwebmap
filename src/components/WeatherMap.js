@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -12,7 +12,6 @@ import L from 'leaflet';
 import { coordinates } from '../data/coordinates';
 import { kml } from '@tmcw/togeojson';
 
-// Configura íconos personalizados
 const blueIcon = new L.Icon({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
@@ -33,80 +32,57 @@ const redIcon = new L.Icon({
 
 function MapUpdater({ lat, lon }) {
   const map = useMap();
-
   useEffect(() => {
     if (lat && lon) {
       map.setView([lat, lon], 14);
     }
   }, [lat, lon, map]);
-
   return null;
 }
 
 function ResetViewControl({ lat, lon }) {
   const map = useMap();
-
   useEffect(() => {
     const button = L.control({ position: 'topright' });
-
     button.onAdd = () => {
       const div = L.DomUtil.create('div', 'leaflet-bar leaflet-control');
       div.style.background = 'white';
       div.style.padding = '5px';
       div.style.cursor = 'pointer';
       div.style.fontSize = '18px';
-      div.style.lineHeight = '20px';
-      div.title = 'Restablecer vista';
       div.innerHTML = '🔄';
-
+      div.title = 'Restablecer vista';
       div.onclick = () => {
-        if (lat && lon) {
-          map.setView([lat, lon], 14);
-        }
+        if (lat && lon) map.setView([lat, lon], 14);
       };
-
       return div;
     };
-
     button.addTo(map);
-
-    return () => {
-      button.remove();
-    };
+    return () => { button.remove(); };
   }, [lat, lon, map]);
-
   return null;
 }
 
 function LegendControl() {
   const map = useMap();
-
   useEffect(() => {
     const legend = L.control({ position: 'bottomright' });
-
     legend.onAdd = () => {
       const div = L.DomUtil.create('div', 'info legend');
       div.style.background = 'white';
       div.style.padding = '10px';
       div.style.fontSize = '14px';
       div.style.boxShadow = '0 0 15px rgba(0,0,0,0.2)';
-
       div.innerHTML = `
         <strong>Leyenda</strong><br />
         <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
         <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres
       `;
-
       return div;
     };
-
     legend.addTo(map);
-
-    return () => {
-      legend.remove();
-    };
+    return () => { legend.remove(); };
   }, [map]);
-
   return null;
 }
 
@@ -125,19 +101,16 @@ function LoadKMLFromFile({ file }) {
 
   useEffect(() => {
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = function (e) {
       try {
         const text = e.target.result;
+        const layer = layerRef.current;
+        if (layer) map.removeLayer(layer);
 
         if (isGeoJSON(text)) {
           const geojson = JSON.parse(text);
-          if (layerRef.current) {
-            map.removeLayer(layerRef.current);
-          }
-          const geojsonLayer = L.geoJSON(geojson);
-          geojsonLayer.addTo(map);
+          const geojsonLayer = L.geoJSON(geojson).addTo(map);
           map.fitBounds(geojsonLayer.getBounds());
           layerRef.current = geojsonLayer;
           return;
@@ -146,60 +119,32 @@ function LoadKMLFromFile({ file }) {
         const parser = new DOMParser();
         const kmlDom = parser.parseFromString(text, 'text/xml');
         const converted = kml(kmlDom);
-        if (layerRef.current) {
-          map.removeLayer(layerRef.current);
-        }
-        const geojsonLayer = L.geoJSON(converted);
-        geojsonLayer.addTo(map);
+        const geojsonLayer = L.geoJSON(converted).addTo(map);
         map.fitBounds(geojsonLayer.getBounds());
         layerRef.current = geojsonLayer;
-      } catch (error) {
+
+      } catch {
         alert('Archivo inválido o corrupto (KML o GeoJSON).');
       }
     };
     reader.readAsText(file);
 
     return () => {
-      if (layerRef.current) {
-        map.removeLayer(layerRef.current);
-      }
+      if (layerRef.current) map.removeLayer(layerRef.current);
     };
   }, [file, map]);
 
   return null;
 }
 
-function WeatherMap({ lat, lon, id }) {
-  const [kmlFile, setKmlFile] = useState(null);
-
+function WeatherMap({ lat, lon, id, file }) {
   const parsedLat = parseFloat(lat);
   const parsedLon = parseFloat(lon);
 
   if (!parsedLat || !parsedLon) return null;
 
   return (
-    <div style={{ height: '550px', marginTop: '20px' }}>
-      <div style={{ marginBottom: '10px' }}>
-        <input
-          type="file"
-          accept=".kml,.geojson"
-          onChange={(e) => setKmlFile(e.target.files[0])}
-          style={{ marginRight: '10px' }}
-        />
-        {kmlFile && (
-          <>
-            <span style={{ fontSize: '14px' }}>Archivo cargado: <strong>{kmlFile.name}</strong></span>
-            <button
-              onClick={() => setKmlFile(null)}
-              className="btn btn-sm btn-outline-danger"
-              style={{ marginLeft: '10px' }}
-            >
-              Quitar archivo
-            </button>
-          </>
-        )}
-      </div>
-
+    <div style={{ height: '550px' }}>
       <MapContainer center={[parsedLat, parsedLon]} zoom={14} style={{ height: '100%', width: '100%' }}>
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="🗺 OpenStreetMap">
@@ -239,7 +184,7 @@ function WeatherMap({ lat, lon, id }) {
         <MapUpdater lat={parsedLat} lon={parsedLon} />
         <ResetViewControl lat={parsedLat} lon={parsedLon} />
         <LegendControl />
-        <LoadKMLFromFile file={kmlFile} />
+        <LoadKMLFromFile file={file} />
       </MapContainer>
     </div>
   );

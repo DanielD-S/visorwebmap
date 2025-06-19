@@ -17,6 +17,7 @@ function App() {
   const [chartsData, setChartsData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [kmlFile, setKmlFile] = useState(null); // NUEVO: estado para archivo
 
   useEffect(() => {
     const today = new Date();
@@ -126,9 +127,33 @@ function App() {
       {Object.keys(chartsData).length > 0 && (
         <section className="results-section">
           <h2>Resultados</h2>
-          <div className="map-container">
-            <WeatherMap lat={latitude} lon={longitude} id={selectedId} />
+
+          {/* Subida de archivo KML */}
+          <div className="kml-uploader" style={{ marginBottom: '20px' }}>
+            <input
+              type="file"
+              accept=".kml,.geojson"
+              onChange={(e) => setKmlFile(e.target.files[0])}
+              style={{ marginRight: '10px' }}
+            />
+            {kmlFile && (
+              <>
+                <span style={{ fontSize: '14px' }}>Archivo cargado: <strong>{kmlFile.name}</strong></span>
+                <button
+                  onClick={() => setKmlFile(null)}
+                  className="btn btn-sm btn-outline-danger"
+                  style={{ marginLeft: '10px' }}
+                >
+                  Quitar archivo
+                </button>
+              </>
+            )}
           </div>
+
+          <div className="map-container">
+            <WeatherMap lat={latitude} lon={longitude} id={selectedId} file={kmlFile} />
+          </div>
+
           <WeatherCharts chartsData={chartsData} />
         </section>
       )}
