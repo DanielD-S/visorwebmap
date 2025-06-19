@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   MapContainer,
   TileLayer,
@@ -9,8 +9,10 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet-omnivore';
+import { coordinates } from '../data/coordinates';
 
-// Configura los íconos de Leaflet
+// Configura íconos
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -65,11 +67,52 @@ function ResetViewControl({ lat, lon }) {
   return null;
 }
 
+function LoadKMLFromFile({ file }) {
+  const map = useMap();
+  const layerRef = useRef(null);
+
+  useEffect(() => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const contents = e.target.result;
+      const parser = new DOMParser();
+      const kml = parser.parseFromString(contents, 'text/xml');
+
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+      }
+
+      const layer = window.omnivore.kml.parse(kml)
+        .on('ready', function () {
+          map.fitBounds(layer.getBounds());
+        })
+        .addTo(map);
+
+      layerRef.current = layer;
+    };
+
+    reader.readAsText(file);
+  }, [file, map]);
+
+  return null;
+}
+
 function WeatherMap({ lat, lon, id }) {
+  const [kmlFile, setKmlFile] = useState(null);
+
   if (!lat || !lon) return null;
 
   return (
-    <div style={{ height: '400px', marginTop: '20px' }}>
+    <div style={{ height: '550px', marginTop: '20px' }}>
+      <input
+        type="file"
+        accept=".kml"
+        onChange={(e) => setKmlFile(e.target.files[0])}
+        style={{ marginBottom: '10px' }}
+      />
+
       <MapContainer center={[lat, lon]} zoom={14} style={{ height: '100%', width: '100%' }}>
         <LayersControl position="topright">
           <LayersControl.BaseLayer checked name="🗺 OpenStreetMap">
@@ -95,11 +138,18 @@ function WeatherMap({ lat, lon, id }) {
         </LayersControl>
 
         <Marker position={[lat, lon]}>
-          <Popup>Torre: {id}</Popup>
+          <Popup>Torre seleccionada: {id}</Popup>
         </Marker>
+
+        {coordinates.map(coord => (
+          <Marker key={coord.id} position={[coord.lat, coord.long]}>
+            <Popup>{coord.id}</Popup>
+          </Marker>
+        ))}
 
         <MapUpdater lat={lat} lon={lon} />
         <ResetViewControl lat={lat} lon={lon} />
+        <LoadKMLFromFile file={kmlFile} />
       </MapContainer>
     </div>
   );
