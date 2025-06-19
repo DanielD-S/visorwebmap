@@ -114,15 +114,37 @@ function LoadKMLFromFile({ file }) {
   const map = useMap();
   const layerRef = useRef(null);
 
+  function isGeoJSON(content) {
+    try {
+      const json = JSON.parse(content);
+      return json.type && json.features;
+    } catch {
+      return false;
+    }
+  }
+
   useEffect(() => {
     if (!file) return;
 
     const reader = new FileReader();
     reader.onload = function (e) {
       try {
+        const text = e.target.result;
+
+        if (isGeoJSON(text)) {
+          const geojson = JSON.parse(text);
+          if (layerRef.current) {
+            map.removeLayer(layerRef.current);
+          }
+          const geojsonLayer = L.geoJSON(geojson);
+          geojsonLayer.addTo(map);
+          map.fitBounds(geojsonLayer.getBounds());
+          layerRef.current = geojsonLayer;
+          return;
+        }
+
         const parser = new DOMParser();
-        const kmlText = e.target.result;
-        const kmlDom = parser.parseFromString(kmlText, 'text/xml');
+        const kmlDom = parser.parseFromString(text, 'text/xml');
         const converted = kml(kmlDom);
         if (layerRef.current) {
           map.removeLayer(layerRef.current);
@@ -132,7 +154,7 @@ function LoadKMLFromFile({ file }) {
         map.fitBounds(geojsonLayer.getBounds());
         layerRef.current = geojsonLayer;
       } catch (error) {
-        alert('Archivo KML inválido o corrupto.');
+        alert('Archivo inválido o corrupto (KML o GeoJSON).');
       }
     };
     reader.readAsText(file);
@@ -157,11 +179,18 @@ function WeatherMap({ lat, lon, id }) {
 
   return (
     <div style={{ height: '550px', marginTop: '20px' }}>
-      <input
-        type="file"
-        accept=".kml"
-        onChange={(e) => setKmlFile(e.target.files[0])}
-        style={{ marginBottom: '10px' }}
+      <div style={{ marginBottom: '10px' }}>
+        <input
+          type="file"
+          accept=".kml,.geojson"
+          onChange={(e) => setKmlFile(e.target.files[0])}
+        />
+        {kmlFile && (
+          <div style={{ marginTop: '5px', fontSize: '14px' }}>
+            Archivo cargado: <strong>{kmlFile.name}</strong>
+          </div>
+        )}
+      </div>
       />
 
       <MapContainer center={[parsedLat, parsedLon]} zoom={14} style={{ height: '100%', width: '100%' }}>
