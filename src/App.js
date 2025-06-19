@@ -18,6 +18,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [kmlFile, setKmlFile] = useState(null);
+  const [manualPointData, setManualPointData] = useState(null);
 
   useEffect(() => {
     const today = new Date();
@@ -31,9 +32,7 @@ function App() {
     return startDate.toISOString().split('T')[0];
   };
 
-  const fetchWeatherData = async (lat, lon) => {
-    setLoading(true);
-    setError('');
+  const fetchWeatherData = async (lat, lon, forManualClick = false) => {
     const startDate = calculateStartDate(endDate, daysBack);
     const variables = Object.keys(WEATHER_VARIABLES).join(',');
     const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
@@ -44,15 +43,29 @@ function App() {
 
       if (data && data.daily && data.daily.time) {
         const processed = processChartData(data);
-        setChartsData(processed);
+
+        if (forManualClick) {
+          const temps = data.daily.temperature_2m_max || [];
+          const min = Math.min(...temps);
+          const max = Math.max(...temps);
+          const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+          setManualPointData({
+            lat,
+            lon,
+            avg: avg.toFixed(1),
+            min,
+            max
+          });
+        } else {
+          setChartsData(processed);
+        }
       } else {
-        setChartsData({});
-        setError('La API no devolvió datos válidos para esta ubicación o rango de fechas.');
+        if (forManualClick) setManualPointData(null);
+        else setChartsData({});
+        setError('La API no devolvió datos válidos.');
       }
     } catch (err) {
       setError('Error al obtener datos');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -91,7 +104,13 @@ function App() {
 
     setLatitude(coord.lat);
     setLongitude(coord.long);
-    fetchWeatherData(coord.lat, coord.long);
+    setManualPointData(null); // limpiar marcador manual si viene de una torre
+    fetchWeatherData(coord.lat, coord.long, false);
+  };
+
+  const handleMapClick = (lat, lon) => {
+    setManualPointData(null); // resetear cualquier popup anterior
+    fetchWeatherData(lat, lon, true);
   };
 
   return (
@@ -123,11 +142,10 @@ function App() {
       {loading && <div className="text-center text-muted mt-3">Cargando datos climáticos...</div>}
       {error && <div className="alert alert-danger mt-3 text-center">{error}</div>}
 
-      {Object.keys(chartsData).length > 0 && (
+      {(Object.keys(chartsData).length > 0 || manualPointData) && (
         <section className="mt-5">
           <h2 className="mb-3">Resultados</h2>
 
-          {/* Input de archivo KML/GeoJSON */}
           <div className="card p-3 mb-4">
             <div className="d-flex align-items-center flex-wrap gap-3">
               <input
@@ -153,11 +171,18 @@ function App() {
             </div>
           </div>
 
-          <div className="mb-4">
-            <WeatherMap lat={latitude} lon={longitude} id={selectedId} file={kmlFile} />
-          </div>
+          <WeatherMap
+            lat={latitude}
+            lon={longitude}
+            id={selectedId}
+            file={kmlFile}
+            onMapClick={handleMapClick}
+            manualPoint={manualPointData}
+          />
 
-          <WeatherCharts chartsData={chartsData} />
+          {Object.keys(chartsData).length > 0 && (
+            <WeatherCharts chartsData={chartsData} />
+          )}
         </section>
       )}
     </div>

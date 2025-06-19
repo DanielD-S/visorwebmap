@@ -31,7 +31,15 @@ const redIcon = new L.Icon({
   shadowSize: [41, 41]
 });
 
-// Centrado automático al cambiar coordenadas
+const greenIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
 function MapUpdater({ lat, lon }) {
   const map = useMap();
   useEffect(() => {
@@ -42,7 +50,6 @@ function MapUpdater({ lat, lon }) {
   return null;
 }
 
-// Botón de reinicio de vista
 function ResetViewControl({ lat, lon }) {
   const map = useMap();
   useEffect(() => {
@@ -68,7 +75,6 @@ function ResetViewControl({ lat, lon }) {
   return null;
 }
 
-// Leyenda
 function LegendControl() {
   const map = useMap();
   useEffect(() => {
@@ -82,7 +88,8 @@ function LegendControl() {
       div.innerHTML = `
         <strong>Leyenda</strong><br />
         <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
-        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres
+        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres<br />
+        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png" style="vertical-align: middle;" /> Punto manual
       `;
       return div;
     };
@@ -92,7 +99,21 @@ function LegendControl() {
   return null;
 }
 
-// Carga de KML o GeoJSON
+function ClickHandler({ onMapClick }) {
+  const map = useMap();
+  useEffect(() => {
+    const handleClick = (e) => {
+      const { lat, lng } = e.latlng;
+      onMapClick(lat, lng);
+    };
+    map.on('click', handleClick);
+    return () => {
+      map.off('click', handleClick);
+    };
+  }, [onMapClick, map]);
+  return null;
+}
+
 function LoadKMLFromFile({ file }) {
   const map = useMap();
   const layerRef = useRef(null);
@@ -142,8 +163,7 @@ function LoadKMLFromFile({ file }) {
   return null;
 }
 
-// Componente principal
-function WeatherMap({ lat, lon, id, file }) {
+function WeatherMap({ lat, lon, id, file, onMapClick, manualPoint }) {
   const parsedLat = parseFloat(lat);
   const parsedLon = parseFloat(lon);
 
@@ -189,9 +209,23 @@ function WeatherMap({ lat, lon, id, file }) {
           )
         ))}
 
+        {/* Punto seleccionado manualmente */}
+        {manualPoint && (
+          <Marker position={[manualPoint.lat, manualPoint.lon]} icon={greenIcon}>
+            <Popup>
+              <strong>Punto seleccionado</strong><br />
+              📍 {manualPoint.lat.toFixed(4)}, {manualPoint.lon.toFixed(4)}<br />
+              🌡 Promedio: {manualPoint.avg} °C<br />
+              🔻 Mín: {manualPoint.min} °C<br />
+              🔺 Máx: {manualPoint.max} °C
+            </Popup>
+          </Marker>
+        )}
+
         <MapUpdater lat={parsedLat} lon={parsedLon} />
         <ResetViewControl lat={parsedLat} lon={parsedLon} />
         <LegendControl />
+        <ClickHandler onMapClick={onMapClick} />
         <LoadKMLFromFile file={file} />
       </MapContainer>
     </div>
