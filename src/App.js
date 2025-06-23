@@ -19,6 +19,7 @@ function App() {
   const [error, setError] = useState('');
   const [kmlFile, setKmlFile] = useState(null);
   const [manualPointData, setManualPointData] = useState(null);
+  const [mode, setMode] = useState('daily');
 
   useEffect(() => {
     const today = new Date();
@@ -33,13 +34,22 @@ function App() {
   };
 
   const fetchWeatherData = async (lat, lon, forManualClick = false) => {
-    const startDate = calculateStartDate(endDate, daysBack);
+    setLoading(true);
+    setError('');
+
+    const [day, month, year] = endDate.split('-');
+    const formattedEnd = `${year}-${month}-${day}`;
+    const startDate = calculateStartDate(formattedEnd, daysBack);
+
     const variables = Object.keys(WEATHER_VARIABLES).join(',');
-    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${formattedEnd}&daily=${variables}&timezone=auto`;
+
+    console.log('Consultando URL:', url);
 
     try {
       const res = await fetch(url);
       const data = await res.json();
+      console.log('Respuesta API:', data);
 
       if (data && data.daily && data.daily.time) {
         const processed = processChartData(data);
@@ -60,12 +70,16 @@ function App() {
           setChartsData(processed);
         }
       } else {
+        console.warn('Datos inválidos:', data);
         if (forManualClick) setManualPointData(null);
         else setChartsData({});
         setError('La API no devolvió datos válidos.');
       }
     } catch (err) {
-      setError('Error al obtener datos');
+      console.error('Error al obtener datos:', err);
+      setError('Error al obtener datos (ver consola).');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,30 +106,49 @@ function App() {
     const coord = coordinates.find(c => c.id === selectedId);
     const today = new Date().toISOString().split('T')[0];
 
-    if (!coord || !endDate || daysBack < 7 || daysBack > 56) {
+    if (!coord || !endDate || (mode === 'daily' && (daysBack < 7 || daysBack > 56))) {
       setError('Verifica que todos los campos estén completos y correctos.');
       return;
     }
 
-    if (endDate > today) {
+    const [day, month, year] = endDate.split('-');
+    const formattedEnd = `${year}-${month}-${day}`;
+
+    if (formattedEnd > today && mode === 'daily') {
       setError('No puedes consultar fechas futuras.');
       return;
     }
 
     setLatitude(coord.lat);
     setLongitude(coord.long);
-    setManualPointData(null); // limpiar marcador manual si viene de una torre
-    fetchWeatherData(coord.lat, coord.long, false);
+    setManualPointData(null);
+    fetchWeatherData(coord.lat, coord.long);
   };
 
   const handleMapClick = (lat, lon) => {
-    setManualPointData(null); // resetear cualquier popup anterior
-    fetchWeatherData(lat, lon, true);
+    if (mode === 'daily') {
+      setManualPointData(null);
+      fetchWeatherData(lat, lon, true);
+    } else {
+      setError('Solo puedes usar clic en el mapa en modo Diario.');
+    }
   };
 
   return (
     <div className="container my-4">
       <h1 className="text-center mb-4">Visualizador Climático</h1>
+
+      <div className="form-group text-center mb-3">
+        <label className="me-2">Modo de consulta:</label>
+        <select
+          className="form-select d-inline-block w-auto"
+          value={mode}
+          onChange={(e) => setMode(e.target.value)}
+        >
+          <option value="daily">Diario</option>
+          <option value="hourly">Por hora (últimas 48h)</option>
+        </select>
+      </div>
 
       <WeatherForm
         selectedId={selectedId}
@@ -133,7 +166,7 @@ function App() {
         <button
           onClick={handleClick}
           className="btn btn-primary"
-          disabled={loading || !selectedId || !endDate || daysBack < 7 || daysBack > 56}
+          disabled={loading || !selectedId || (mode === 'daily' && (!endDate || daysBack < 7 || daysBack > 56))}
         >
           {loading ? 'Cargando...' : 'Consultar datos climáticos'}
         </button>
@@ -181,7 +214,7 @@ function App() {
           />
 
           {Object.keys(chartsData).length > 0 && (
-            <WeatherCharts chartsData={chartsData} />
+            <WeatherCharts chartsData={chartsData} mode={mode} />
           )}
         </section>
       )}

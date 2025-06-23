@@ -58,7 +58,7 @@ function exportChartAsPDF(canvasId, label) {
   pdf.save(label.replace(/\s+/g, '_') + '.pdf');
 }
 
-function WeatherCharts({ chartsData }) {
+function WeatherCharts({ chartsData, mode }) {
   useEffect(() => {
     Object.keys(Chart.instances || {}).forEach((key) => {
       const chart = Chart.instances[key];
@@ -105,9 +105,15 @@ function WeatherCharts({ chartsData }) {
                 }
               },
               x: {
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45,
+                  autoSkip: true,
+                  maxTicksLimit: 24
+                },
                 title: {
                   display: true,
-                  text: 'Fecha'
+                  text: mode === 'hourly' ? 'Fecha y hora' : 'Fecha'
                 }
               }
             }
@@ -115,7 +121,7 @@ function WeatherCharts({ chartsData }) {
         });
       }
     });
-  }, [chartsData]);
+  }, [chartsData, mode]);
 
   if (!chartsData || Object.keys(chartsData).length === 0) return null;
 
@@ -134,30 +140,10 @@ function WeatherCharts({ chartsData }) {
               </div>
 
               <div className="btn-group btn-group-sm">
-                <button
-                  onClick={() => exportSingleChartCSV(dataset)}
-                  className="btn btn-outline-secondary"
-                >
-                  📄 CSV
-                </button>
-                <button
-                  onClick={() => exportSingleChartExcel(dataset)}
-                  className="btn btn-outline-success"
-                >
-                  📊 Excel
-                </button>
-                <button
-                  onClick={() => exportChartAsImage(canvasId, dataset.config.label)}
-                  className="btn btn-outline-info"
-                >
-                  🖼 PNG
-                </button>
-                <button
-                  onClick={() => exportChartAsPDF(canvasId, dataset.config.label)}
-                  className="btn btn-outline-danger"
-                >
-                  📄 PDF
-                </button>
+                <button onClick={() => exportSingleChartCSV(dataset)} className="btn btn-outline-secondary">📄 CSV</button>
+                <button onClick={() => exportSingleChartExcel(dataset)} className="btn btn-outline-success">📊 Excel</button>
+                <button onClick={() => exportChartAsImage(canvasId, dataset.config.label)} className="btn btn-outline-info">🖼 PNG</button>
+                <button onClick={() => exportChartAsPDF(canvasId, dataset.config.label)} className="btn btn-outline-danger">📄 PDF</button>
               </div>
             </div>
 
