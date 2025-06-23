@@ -23,15 +23,25 @@ function App() {
 
   useEffect(() => {
     const today = new Date();
-    setEndDate(today.toISOString().split('T')[0]);
+    const formatted = today.toISOString().split('T')[0];
+    setEndDate(formatted);
   }, []);
 
+  useEffect(() => {
+    if (mode === 'hourly') {
+      const now = new Date();
+      setEndDate(now.toISOString());
+    } else {
+      const today = new Date();
+      const formatted = today.toISOString().split('T')[0];
+      setEndDate(formatted);
+    }
+  }, [mode]);
+
   const calculateStartDate = (end, days) => {
-    const [day, month, year] = end.split('-');
-    const safeEndDate = new Date(`${year}-${month}-${day}`);
-    const startDate = new Date(safeEndDate);
-    startDate.setDate(startDate.getDate() - days + 1);
-    return startDate.toISOString().split('T')[0];
+    const date = new Date(end);
+    date.setDate(date.getDate() - days + 1);
+    return date.toISOString().split('T')[0];
   };
 
   const fetchWeatherData = async (lat, lon, forManualClick = false) => {
@@ -39,10 +49,9 @@ function App() {
     setError('');
 
     try {
-      const [day, month, year] = endDate.split('-');
-      const safeEndDate = new Date(`${year}-${month}-${day}`);
+      const safeEndDate = new Date(endDate);
       const formattedEnd = safeEndDate.toISOString().split('T')[0];
-      const startDate = calculateStartDate(endDate, daysBack);
+      const startDate = calculateStartDate(formattedEnd, daysBack);
       const variables = Object.keys(WEATHER_VARIABLES).join(',');
       const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${formattedEnd}&daily=${variables}&timezone=auto`;
 
@@ -83,8 +92,8 @@ function App() {
       const past = new Date(now);
       past.setHours(now.getHours() - 48);
 
-      const startISO = past.toISOString().split('T')[0];
-      const endISO = now.toISOString().split('T')[0];
+      const startISO = past.toISOString();
+      const endISO = now.toISOString();
 
       const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startISO}&end_date=${endISO}&hourly=temperature_2m,precipitation,windspeed_10m&timezone=auto`;
 
