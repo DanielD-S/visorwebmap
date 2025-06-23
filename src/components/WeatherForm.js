@@ -9,7 +9,8 @@ function WeatherForm({
   setEndDate,
   daysBack,
   setDaysBack,
-  coordinates
+  coordinates,
+  mode
 }) {
   return (
     <div className="form-container">
@@ -36,25 +37,36 @@ function WeatherForm({
         </div>
       </div>
 
-      <div className="form-row">
-        <div className="form-group">
-          <label>Fecha final:</label>
-          <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+      {mode === 'daily' && (
+        <div className="form-row">
+          <div className="form-group">
+            <label>Fecha final:</label>
+            <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} />
+          </div>
+          <div className="form-group">
+            <label>Días hacia atrás:</label>
+            <input
+              type="number"
+              min="7"
+              max="56"
+              value={daysBack}
+              onChange={e => setDaysBack(Number(e.target.value))}
+            />
+          </div>
         </div>
-        <div className="form-group">
-          <label>Días hacia atrás:</label>
-          <input
-            type="number"
-            min="7"
-            max="56"
-            value={daysBack}
-            onChange={e => setDaysBack(Number(e.target.value))}
-          />
+      )}
+
+      {mode === 'hourly' && (
+        <div className="form-row">
+          <div className="form-group">
+            <p className="text-muted small">
+              Se consultarán automáticamente las últimas 48 horas desde el momento actual.
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
 
 export default WeatherForm;
-

@@ -219,6 +219,7 @@ function App() {
         daysBack={daysBack}
         setDaysBack={setDaysBack}
         coordinates={coordinates}
+        mode={mode}
       />
 
       <div className="d-flex justify-content-center mt-3">
