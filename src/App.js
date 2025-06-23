@@ -37,19 +37,17 @@ function App() {
     setLoading(true);
     setError('');
 
-    const [day, month, year] = endDate.split('-');
-    const formattedEnd = `${year}-${month}-${day}`;
-    const startDate = calculateStartDate(formattedEnd, daysBack);
-
-    const variables = Object.keys(WEATHER_VARIABLES).join(',');
-    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${formattedEnd}&daily=${variables}&timezone=auto`;
-
-    console.log('Consultando URL:', url);
-
     try {
+      const [day, month, year] = endDate.split('-');
+      const formattedEnd = `${year}-${month}-${day}`;
+      const startDate = calculateStartDate(formattedEnd, daysBack);
+      const variables = Object.keys(WEATHER_VARIABLES).join(',');
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${formattedEnd}&daily=${variables}&timezone=auto`;
+
+      console.log('Consultando URL:', url);
+
       const res = await fetch(url);
       const data = await res.json();
-      console.log('Respuesta API:', data);
 
       if (data && data.daily && data.daily.time) {
         const processed = processChartData(data);
@@ -70,7 +68,6 @@ function App() {
           setChartsData(processed);
         }
       } else {
-        console.warn('Datos inválidos:', data);
         if (forManualClick) setManualPointData(null);
         else setChartsData({});
         setError('La API no devolvió datos válidos.');
@@ -78,6 +75,40 @@ function App() {
     } catch (err) {
       console.error('Error al obtener datos:', err);
       setError('Error al obtener datos (ver consola).');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchWeatherDataHourly = async (lat, lon) => {
+    setLoading(true);
+    setError('');
+
+    const now = new Date();
+    const past = new Date(now);
+    past.setHours(now.getHours() - 48);
+
+    const startISO = past.toISOString().split('T')[0];
+    const endISO = now.toISOString().split('T')[0];
+
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startISO}&end_date=${endISO}&hourly=temperature_2m,precipitation,windspeed_10m&timezone=auto`;
+
+    console.log('Consultando URL (48h):', url);
+
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (data && data.hourly && data.hourly.time) {
+        const processed = processHourlyChartData(data.hourly);
+        setChartsData(processed);
+      } else {
+        setChartsData({});
+        setError('No se recibieron datos horarios válidos.');
+      }
+    } catch (err) {
+      console.error('Error al obtener datos horarios:', err);
+      setError('Error al obtener datos horarios.');
     } finally {
       setLoading(false);
     }
@@ -102,19 +133,45 @@ function App() {
     return datasets;
   };
 
+  const processHourlyChartData = (hourly) => {
+    const labels = hourly.time.map(t =>
+      new Date(t).toLocaleString('es-CL', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    );
+
+    const variables = {
+      temperature_2m: { label: 'Temperatura', unit: '°C', color: 'rgba(255,99,132,0.8)' },
+      precipitation: { label: 'Precipitación', unit: 'mm', color: 'rgba(54,162,235,0.8)' },
+      windspeed_10m: { label: 'Viento', unit: 'km/h', color: 'rgba(255,206,86,0.8)' }
+    };
+
+    const result = {};
+    for (const key in variables) {
+      if (hourly[key]) {
+        result[key] = {
+          labels,
+          data: hourly[key],
+          config: variables[key]
+        };
+      }
+    }
+    return result;
+  };
+
   const handleClick = () => {
     const coord = coordinates.find(c => c.id === selectedId);
     const today = new Date().toISOString().split('T')[0];
 
-    if (!coord || !endDate || (mode === 'daily' && (daysBack < 7 || daysBack > 56))) {
+    if (!coord || (mode === 'daily' && (!endDate || daysBack < 7 || daysBack > 56))) {
       setError('Verifica que todos los campos estén completos y correctos.');
       return;
     }
 
-    const [day, month, year] = endDate.split('-');
-    const formattedEnd = `${year}-${month}-${day}`;
-
-    if (formattedEnd > today && mode === 'daily') {
+    if (endDate > today && mode === 'daily') {
       setError('No puedes consultar fechas futuras.');
       return;
     }
@@ -122,7 +179,12 @@ function App() {
     setLatitude(coord.lat);
     setLongitude(coord.long);
     setManualPointData(null);
-    fetchWeatherData(coord.lat, coord.long);
+
+    if (mode === 'hourly') {
+      fetchWeatherDataHourly(coord.lat, coord.long);
+    } else {
+      fetchWeatherData(coord.lat, coord.long, false);
+    }
   };
 
   const handleMapClick = (lat, lon) => {
