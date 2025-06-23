@@ -27,8 +27,9 @@ function App() {
   }, []);
 
   const calculateStartDate = (end, days) => {
-    const endDate = new Date(end);
-    const startDate = new Date(endDate);
+    const [day, month, year] = end.split('-');
+    const safeEndDate = new Date(`${year}-${month}-${day}`);
+    const startDate = new Date(safeEndDate);
     startDate.setDate(startDate.getDate() - days + 1);
     return startDate.toISOString().split('T')[0];
   };
@@ -39,12 +40,11 @@ function App() {
 
     try {
       const [day, month, year] = endDate.split('-');
-      const formattedEnd = `${year}-${month}-${day}`;
-      const startDate = calculateStartDate(formattedEnd, daysBack);
+      const safeEndDate = new Date(`${year}-${month}-${day}`);
+      const formattedEnd = safeEndDate.toISOString().split('T')[0];
+      const startDate = calculateStartDate(endDate, daysBack);
       const variables = Object.keys(WEATHER_VARIABLES).join(',');
       const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${formattedEnd}&daily=${variables}&timezone=auto`;
-
-      console.log('Consultando URL:', url);
 
       const res = await fetch(url);
       const data = await res.json();
@@ -57,13 +57,7 @@ function App() {
           const min = Math.min(...temps);
           const max = Math.max(...temps);
           const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
-          setManualPointData({
-            lat,
-            lon,
-            avg: avg.toFixed(1),
-            min,
-            max
-          });
+          setManualPointData({ lat, lon, avg: avg.toFixed(1), min, max });
         } else {
           setChartsData(processed);
         }
@@ -84,18 +78,16 @@ function App() {
     setLoading(true);
     setError('');
 
-    const now = new Date();
-    const past = new Date(now);
-    past.setHours(now.getHours() - 48);
-
-    const startISO = past.toISOString().split('T')[0];
-    const endISO = now.toISOString().split('T')[0];
-
-    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startISO}&end_date=${endISO}&hourly=temperature_2m,precipitation,windspeed_10m&timezone=auto`;
-
-    console.log('Consultando URL (48h):', url);
-
     try {
+      const now = new Date();
+      const past = new Date(now);
+      past.setHours(now.getHours() - 48);
+
+      const startISO = past.toISOString().split('T')[0];
+      const endISO = now.toISOString().split('T')[0];
+
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startISO}&end_date=${endISO}&hourly=temperature_2m,precipitation,windspeed_10m&timezone=auto`;
+
       const res = await fetch(url);
       const data = await res.json();
 
@@ -118,7 +110,6 @@ function App() {
     const dates = data.daily.time.map(date =>
       new Date(date).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit' })
     );
-
     const datasets = {};
     Object.keys(WEATHER_VARIABLES).forEach(variable => {
       if (data.daily[variable]) {
@@ -129,7 +120,6 @@ function App() {
         };
       }
     });
-
     return datasets;
   };
 
@@ -142,13 +132,11 @@ function App() {
         minute: '2-digit'
       })
     );
-
     const variables = {
       temperature_2m: { label: 'Temperatura', unit: '°C', color: 'rgba(255,99,132,0.8)' },
       precipitation: { label: 'Precipitación', unit: 'mm', color: 'rgba(54,162,235,0.8)' },
       windspeed_10m: { label: 'Viento', unit: 'km/h', color: 'rgba(255,206,86,0.8)' }
     };
-
     const result = {};
     for (const key in variables) {
       if (hourly[key]) {
