@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Chart } from 'chart.js/auto';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
+import './WeatherCharts.css';
 
 function computeStats(data) {
   const validData = data.filter(d => typeof d === 'number' && !isNaN(d));
@@ -132,8 +133,8 @@ function WeatherCharts({ chartsData, mode }) {
         const canvasId = `chart-${variable}`;
 
         return (
-          <div className="mb-5" key={variable}>
-            <div className="d-flex justify-content-between align-items-center mb-2">
+          <div className="chart-wrapper" key={variable}>
+            <div className="chart-toolbar">
               <div className="text-muted small">
                 <strong>{dataset.config.label}</strong><br />
                 Promedio: {stats.avg.toFixed(1)} {dataset.config.unit} | Mín: {stats.min} | Máx: {stats.max}
@@ -147,8 +148,8 @@ function WeatherCharts({ chartsData, mode }) {
               </div>
             </div>
 
-            <div className="border rounded shadow-sm p-3 bg-white">
-              <canvas id={canvasId} height="200"></canvas>
+            <div className="chart-canvas">
+              <canvas id={canvasId}></canvas>
             </div>
           </div>
         );
