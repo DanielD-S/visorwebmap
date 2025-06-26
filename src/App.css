@@ -4,6 +4,11 @@ body {
   margin: 0;
 }
 
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
 .container {
   max-width: 1200px;
   margin: 20px auto;
@@ -94,7 +99,6 @@ canvas {
   height: 240px !important;
 }
 
-
 .results-section {
   margin-top: 40px;
   border-top: 1px solid #ccc;
@@ -129,13 +133,27 @@ canvas {
   overflow: hidden;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
 }
+
+/* ----------------- Responsive ------------------ */
 @media (max-width: 768px) {
+  .container {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
   .form-row {
     flex-direction: column;
   }
 
   .form-group {
     min-width: 100%;
+  }
+
+  select {
+    width: 100% !important;
   }
 
   .charts-container {
@@ -163,5 +181,15 @@ canvas {
 
   .results-section h2 {
     font-size: 1.2rem;
+  }
+
+  .d-flex {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .d-flex > * {
+    width: 100% !important;
+    margin-bottom: 10px;
   }
 }

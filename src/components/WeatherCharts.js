@@ -141,11 +141,31 @@ function WeatherCharts({ chartsData, mode }) {
               </div>
 
               <div className="btn-group btn-group-sm">
-                <button onClick={() => exportSingleChartCSV(dataset)} className="btn btn-outline-secondary">📄 CSV</button>
-                <button onClick={() => exportSingleChartExcel(dataset)} className="btn btn-outline-success">📊 Excel</button>
-                <button onClick={() => exportChartAsImage(canvasId, dataset.config.label)} className="btn btn-outline-info">🖼 PNG</button>
-                <button onClick={() => exportChartAsPDF(canvasId, dataset.config.label)} className="btn btn-outline-danger">📄 PDF</button>
-              </div>
+  <button
+    onClick={() => exportSingleChartCSV(dataset)}
+    className="btn btn-outline-secondary"
+    data-tooltip="Exportar como CSV"
+  >📄 CSV</button>
+
+  <button
+    onClick={() => exportSingleChartExcel(dataset)}
+    className="btn btn-outline-success"
+    data-tooltip="Exportar como Excel"
+  >📊 Excel</button>
+
+  <button
+    onClick={() => exportChartAsImage(canvasId, dataset.config.label)}
+    className="btn btn-outline-info"
+    data-tooltip="Guardar imagen PNG"
+  >🖼 PNG</button>
+
+  <button
+    onClick={() => exportChartAsPDF(canvasId, dataset.config.label)}
+    className="btn btn-outline-danger"
+    data-tooltip="Descargar como PDF"
+  >📄 PDF</button>
+</div>
+
             </div>
 
             <div className="chart-canvas">

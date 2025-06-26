@@ -1,31 +1,58 @@
 .popup-container {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  max-width: 220px;
+  font-family: Arial, sans-serif;
   font-size: 14px;
   line-height: 1.4;
   color: #2c3e50;
-  max-width: 220px;
 }
 
 .popup-title {
-  font-weight: 600;
+  font-weight: bold;
   font-size: 15px;
-  color: #1a5276;
   margin-bottom: 4px;
+  color: #34495e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .popup-trazado {
+  color: #2980b9;
+  font-style: italic;
   font-size: 13px;
-  color: #117864;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .popup-divider {
-  border: 0;
-  border-top: 1px solid #ccc;
+  border: none;
+  height: 1px;
+  background-color: #ccc;
   margin: 6px 0;
 }
 
 .popup-coords {
   font-size: 13px;
   color: #555;
+}
+
+@media (max-width: 768px) {
+  .popup-container {
+    font-size: 13px;
+    max-width: 100%;
+  }
+
+  .popup-title {
+    font-size: 14px;
+  }
+
+  .popup-trazado {
+    font-size: 12.5px;
+  }
+
+  .popup-coords {
+    font-size: 12.5px;
+  }
 }
