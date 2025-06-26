@@ -9,6 +9,7 @@ import {
   useMap
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import './PopupInfo.css';
 import L from 'leaflet';
 import JSZip from 'jszip';
 import { coordinates } from '../data/coordinates';
@@ -82,7 +83,7 @@ function LegendControl() {
         <strong>Leyenda</strong><br />
         <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
         <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres<br />
-        <span style="display: inline-block; width: 20px; height: 4px; background-color: orange; vertical-align: middle; margin-right: 5px;"></span> Trazado entre torres<br />
+        <span style="display: inline-block; width: 20px; height: 4px; background-color: orange; vertical-align: middle; margin-right: 5px;"></span> NPDA-POL 2x500kv <br />
         <span style="display: inline-block; width: 20px; height: 4px; background-color: green; vertical-align: middle; margin-right: 5px;"></span> Capa cargada
       `;
       return div;
@@ -201,14 +202,12 @@ function WeatherMap({ lat, lon, id, file }) {
               attribution="&copy; OpenStreetMap contributors"
             />
           </LayersControl.BaseLayer>
-
           <LayersControl.BaseLayer name="🌍 Esri World Imagery">
             <TileLayer
               url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
               attribution="Tiles &copy; Esri"
             />
           </LayersControl.BaseLayer>
-
           <LayersControl.BaseLayer name="📄 CartoDB Light">
             <TileLayer
               url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
@@ -217,16 +216,43 @@ function WeatherMap({ lat, lon, id, file }) {
           </LayersControl.BaseLayer>
         </LayersControl>
 
+        {/* Polilínea */}
         <Polyline positions={polylineCoords} pathOptions={{ color: 'orange', weight: 3, opacity: 0.8 }} />
 
+        {/* Torre seleccionada */}
         <Marker position={[parsedLat, parsedLon]} icon={redIcon}>
-          <Popup>Torre seleccionada: {id}</Popup>
+          <Popup>
+            <div className="popup-container">
+              <div className="popup-title">🏗️ {id}</div>
+              {coordinates.find(c => c.id === id)?.Trazado && (
+                <div className="popup-trazado">🛤️ {coordinates.find(c => c.id === id).Trazado}</div>
+              )}
+              <hr className="popup-divider" />
+              <div className="popup-coords">
+                📍 <strong>Lat:</strong> {parsedLat.toFixed(5)}<br />
+                📍 <strong>Lon:</strong> {parsedLon.toFixed(5)}
+              </div>
+            </div>
+          </Popup>
         </Marker>
 
+        {/* Otras torres */}
         {coordinates.map(coord => (
           coord.id !== id && (
             <Marker key={coord.id} position={[coord.lat, coord.long]} icon={blueIcon}>
-              <Popup>{coord.id}</Popup>
+              <Popup>
+                <div className="popup-container">
+                  <div className="popup-title">🏗️ {coord.id}</div>
+                  {coord.Trazado && (
+                    <div className="popup-trazado">🛤️ {coord.Trazado}</div>
+                  )}
+                  <hr className="popup-divider" />
+                  <div className="popup-coords">
+                    📍 <strong>Lat:</strong> {coord.lat.toFixed(5)}<br />
+                    📍 <strong>Lon:</strong> {coord.long.toFixed(5)}
+                  </div>
+                </div>
+              </Popup>
             </Marker>
           )
         ))}
