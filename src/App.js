@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import './App.css';
 import 'leaflet-omnivore';
 import { Polyline } from 'react-leaflet';
-
+import JSZip from 'jszip';
+import { kml } from '@tmcw/togeojson';
 
 import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';
@@ -20,6 +21,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mode, setMode] = useState('daily');
+  const [file, setFile] = useState(null); // nuevo estado para archivo
 
   useEffect(() => {
     const today = new Date();
@@ -158,21 +160,33 @@ function App() {
     }
   };
 
-  return (
-    <div className="container my-4">
-      <h1 className="text-center mb-4">Visualizador Climático</h1>
+return (
+  <div className="container my-4">
 
-      <div className="form-group text-center">
-        <label className="fw-bold">Modo de consulta:</label>
-        <select
-          className="form-select d-inline w-auto ms-2"
-          value={mode}
-          onChange={(e) => setMode(e.target.value)}
-        >
-          <option value="daily">Diario</option>
-          <option value="hourly">Por hora (últimas 48h)</option>
-        </select>
-      </div>
+    {/* Logo de Interchile centrado */}
+    <div className="text-center mb-3">
+      <img
+        src="https://www.interchilesa.com/wp-content/uploads/2025/03/isa-energia.logo_.png"
+        alt="Logo Interchile"
+        style={{ maxWidth: '240px', height: 'auto' }}
+      />
+    </div>
+
+    {/* Título principal */}
+    <h1 className="text-center mb-4">Visualizador Meteorológico ISA Energía</h1>
+
+    <div className="form-group text-center">
+      <label className="fw-bold">Modo de consulta:</label>
+      <select
+        className="form-select d-inline w-auto ms-2"
+        value={mode}
+        onChange={(e) => setMode(e.target.value)}
+      >
+        <option value="daily">Diario</option>
+        <option value="hourly">Por hora (últimas 48h)</option>
+      </select>
+    </div>
+
 
       <WeatherForm
         selectedId={selectedId}
@@ -186,6 +200,15 @@ function App() {
         coordinates={coordinates}
         mode={mode}
       />
+
+      <div className="d-flex justify-content-center mt-3">
+        <input
+          type="file"
+          accept=".kml,.geojson,.kmz"
+          onChange={(e) => setFile(e.target.files[0])}
+          className="form-control w-auto me-2"
+        />
+      </div>
 
       <div className="d-flex justify-content-center mt-3">
         <button
@@ -207,6 +230,7 @@ function App() {
             lat={latitude}
             lon={longitude}
             id={selectedId}
+            file={file}
           />
           <WeatherCharts chartsData={chartsData} />
         </section>

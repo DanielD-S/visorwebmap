@@ -10,6 +10,7 @@ import {
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import JSZip from 'jszip';
 import { coordinates } from '../data/coordinates';
 import { kml } from '@tmcw/togeojson';
 
@@ -80,7 +81,9 @@ function LegendControl() {
       div.innerHTML = `
         <strong>Leyenda</strong><br />
         <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
-        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres
+        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres<br />
+        <span style="display: inline-block; width: 20px; height: 4px; background-color: orange; vertical-align: middle; margin-right: 5px;"></span> Trazado entre torres<br />
+        <span style="display: inline-block; width: 20px; height: 4px; background-color: green; vertical-align: middle; margin-right: 5px;"></span> Capa cargada
       `;
       return div;
     };
@@ -105,31 +108,61 @@ function LoadKMLFromFile({ file }) {
 
   useEffect(() => {
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = function (e) {
-      try {
-        const text = e.target.result;
-        if (layerRef.current) map.removeLayer(layerRef.current);
 
-        if (isGeoJSON(text)) {
-          const geojson = JSON.parse(text);
-          const geojsonLayer = L.geoJSON(geojson).addTo(map);
-          map.fitBounds(geojsonLayer.getBounds());
-          layerRef.current = geojsonLayer;
+    const loadKMZ = async (fileBuffer) => {
+      try {
+        const zip = await JSZip.loadAsync(fileBuffer);
+        const kmlFile = Object.values(zip.files).find(f => f.name.endsWith('.kml'));
+        if (!kmlFile) {
+          alert('No se encontró archivo .kml dentro del .kmz');
           return;
         }
-
-        const parser = new DOMParser();
-        const kmlDom = parser.parseFromString(text, 'text/xml');
+        const kmlText = await kmlFile.async('text');
+        const kmlDom = new DOMParser().parseFromString(kmlText, 'text/xml');
         const converted = kml(kmlDom);
-        const geojsonLayer = L.geoJSON(converted).addTo(map);
-        map.fitBounds(geojsonLayer.getBounds());
-        layerRef.current = geojsonLayer;
-      } catch {
-        alert('Archivo inválido o corrupto (KML o GeoJSON).');
+        const layer = L.geoJSON(converted, { style: { color: 'green' } }).addTo(map);
+        map.fitBounds(layer.getBounds());
+        layerRef.current = layer;
+      } catch (err) {
+        console.error(err);
+        alert('Error al procesar KMZ');
       }
     };
-    reader.readAsText(file);
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+        layerRef.current = null;
+      }
+
+      if (file.name.endsWith('.geojson') || isGeoJSON(e.target.result)) {
+        try {
+          const geojson = JSON.parse(e.target.result);
+          const layer = L.geoJSON(geojson, { style: { color: 'green' } }).addTo(map);
+          map.fitBounds(layer.getBounds());
+          layerRef.current = layer;
+        } catch {
+          alert('GeoJSON inválido.');
+        }
+        return;
+      }
+
+      if (file.name.endsWith('.kml')) {
+        const kmlDom = new DOMParser().parseFromString(e.target.result, 'text/xml');
+        const converted = kml(kmlDom);
+        const layer = L.geoJSON(converted, { style: { color: 'green' } }).addTo(map);
+        map.fitBounds(layer.getBounds());
+        layerRef.current = layer;
+      }
+    };
+
+    if (file.name.endsWith('.kmz')) {
+      reader.onload = (e) => loadKMZ(e.target.result);
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
 
     return () => {
       if (layerRef.current) map.removeLayer(layerRef.current);
@@ -145,7 +178,6 @@ function WeatherMap({ lat, lon, id, file }) {
 
   if (!parsedLat || !parsedLon) return null;
 
-  // Preparamos la línea: NPDA -> Torre 1 -> ... -> Torre 897 -> POL
   const torresNumeradas = coordinates
     .filter(c => /^Torre \d+$/.test(c.id))
     .sort((a, b) => parseInt(a.id.replace('Torre ', '')) - parseInt(b.id.replace('Torre ', '')));
@@ -185,15 +217,12 @@ function WeatherMap({ lat, lon, id, file }) {
           </LayersControl.BaseLayer>
         </LayersControl>
 
-        {/* Polilínea del trazado */}
         <Polyline positions={polylineCoords} pathOptions={{ color: 'orange', weight: 3, opacity: 0.8 }} />
 
-        {/* Torre seleccionada */}
         <Marker position={[parsedLat, parsedLon]} icon={redIcon}>
           <Popup>Torre seleccionada: {id}</Popup>
         </Marker>
 
-        {/* Otras torres */}
         {coordinates.map(coord => (
           coord.id !== id && (
             <Marker key={coord.id} position={[coord.lat, coord.long]} icon={blueIcon}>
