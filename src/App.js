@@ -12,6 +12,8 @@ function App() {
   const [selectedId, setSelectedId] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
+  const [manualLat, setManualLat] = useState(null);
+  const [manualLon, setManualLon] = useState(null);
   const [endDate, setEndDate] = useState('');
   const [daysBack, setDaysBack] = useState(28);
   const [chartsData, setChartsData] = useState({});
@@ -19,10 +21,10 @@ function App() {
   const [error, setError] = useState('');
   const [mode, setMode] = useState('daily');
 
-function average(arr) {
-  if (!arr || arr.length === 0) return 0;
-  return (arr.reduce((sum, val) => sum + val, 0) / arr.length).toFixed(1);
-}
+  function average(arr) {
+    if (!arr || arr.length === 0) return 0;
+    return (arr.reduce((sum, val) => sum + val, 0) / arr.length).toFixed(1);
+  }
 
   useEffect(() => {
     const today = new Date();
@@ -36,7 +38,7 @@ function average(arr) {
     return startDate.toISOString().split('T')[0];
   };
 
-  const fetchWeatherData = async (lat, lon, forManualClick = false) => {
+  const fetchWeatherData = async (lat, lon) => {
     setLoading(true);
     setError('');
     const startDate = calculateStartDate(endDate, daysBack);
@@ -153,7 +155,7 @@ function average(arr) {
         setError('Verifica que todos los campos estén completos y correctos.');
         return;
       }
-      fetchWeatherData(coord.lat, coord.long, false);
+      fetchWeatherData(coord.lat, coord.long);
     }
 
     if (mode === 'hourly') {
@@ -207,32 +209,19 @@ function average(arr) {
         <section className="mt-5">
           <h2 className="mb-3">Resultados</h2>
           <WeatherMap
-  lat={latitude}
-  lon={longitude}
-  id={selectedId}
-  manualPoint={
-    mode === 'daily' && chartsData.temperature_2m_max
-      ? {
-          lat: parseFloat(latitude),
-          lon: parseFloat(longitude),
-          avg: average(chartsData.temperature_2m_max.data),
-          min: Math.min(...(chartsData.temperature_2m_min?.data || [])),
-          max: Math.max(...chartsData.temperature_2m_max.data)
-        }
-      : null
-  }
-  onMapClick={(lat, lon) => {
-    setLatitude(lat);
-    setLongitude(lon);
-    setSelectedId('');
-    if (mode === 'daily') {
-      fetchWeatherData(lat, lon);
-    } else {
-      fetchWeatherDataHourly(lat, lon);
-    }
-  }}
-/>
-
+            lat={latitude}
+            lon={longitude}
+            id={selectedId}
+            manualPoint={
+              manualLat && manualLon
+                ? { lat: manualLat, lon: manualLon }
+                : null
+            }
+            onMapClick={(lat, lon) => {
+              setManualLat(lat);
+              setManualLon(lon);
+            }}
+          />
           <WeatherCharts chartsData={chartsData} />
         </section>
       )}
