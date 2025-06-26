@@ -19,6 +19,11 @@ function App() {
   const [error, setError] = useState('');
   const [mode, setMode] = useState('daily');
 
+function average(arr) {
+  if (!arr || arr.length === 0) return 0;
+  return (arr.reduce((sum, val) => sum + val, 0) / arr.length).toFixed(1);
+}
+
   useEffect(() => {
     const today = new Date();
     setEndDate(today.toISOString().split('T')[0]);
@@ -202,10 +207,32 @@ function App() {
         <section className="mt-5">
           <h2 className="mb-3">Resultados</h2>
           <WeatherMap
-            lat={latitude}
-            lon={longitude}
-            id={selectedId}
-          />
+  lat={latitude}
+  lon={longitude}
+  id={selectedId}
+  manualPoint={
+    mode === 'daily' && chartsData.temperature_2m_max
+      ? {
+          lat: parseFloat(latitude),
+          lon: parseFloat(longitude),
+          avg: average(chartsData.temperature_2m_max.data),
+          min: Math.min(...(chartsData.temperature_2m_min?.data || [])),
+          max: Math.max(...chartsData.temperature_2m_max.data)
+        }
+      : null
+  }
+  onMapClick={(lat, lon) => {
+    setLatitude(lat);
+    setLongitude(lon);
+    setSelectedId('');
+    if (mode === 'daily') {
+      fetchWeatherData(lat, lon);
+    } else {
+      fetchWeatherDataHourly(lat, lon);
+    }
+  }}
+/>
+
           <WeatherCharts chartsData={chartsData} />
         </section>
       )}
