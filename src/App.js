@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import 'leaflet-omnivore';
+import { Polyline } from 'react-leaflet';
+
 
 import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';

@@ -5,6 +5,7 @@ import {
   Marker,
   Popup,
   LayersControl,
+  Polyline,
   useMap
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -24,15 +25,6 @@ const blueIcon = new L.Icon({
 
 const redIcon = new L.Icon({
   iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
-
-const greenIcon = new L.Icon({
-  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
@@ -88,27 +80,13 @@ function LegendControl() {
       div.innerHTML = `
         <strong>Leyenda</strong><br />
         <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
-        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres<br /> `;
+        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres
+      `;
       return div;
     };
     legend.addTo(map);
     return () => legend.remove();
   }, [map]);
-  return null;
-}
-
-function ClickHandler({ onMapClick }) {
-  const map = useMap();
-  useEffect(() => {
-    const handleClick = (e) => {
-      const { lat, lng } = e.latlng;
-      onMapClick(lat, lng);
-    };
-    map.on('click', handleClick);
-    return () => {
-      map.off('click', handleClick);
-    };
-  }, [onMapClick, map]);
   return null;
 }
 
@@ -161,11 +139,25 @@ function LoadKMLFromFile({ file }) {
   return null;
 }
 
-function WeatherMap({ lat, lon, id, file, onMapClick, manualPoint }) {
+function WeatherMap({ lat, lon, id, file }) {
   const parsedLat = parseFloat(lat);
   const parsedLon = parseFloat(lon);
 
   if (!parsedLat || !parsedLon) return null;
+
+  // Preparamos la línea: NPDA -> Torre 1 -> ... -> Torre 897 -> POL
+  const torresNumeradas = coordinates
+    .filter(c => /^Torre \d+$/.test(c.id))
+    .sort((a, b) => parseInt(a.id.replace('Torre ', '')) - parseInt(b.id.replace('Torre ', '')));
+
+  const inicio = coordinates.find(c => c.id === 'NPDA');
+  const fin = coordinates.find(c => c.id === 'POL');
+
+  const polylineCoords = [
+    ...(inicio ? [[inicio.lat, inicio.long]] : []),
+    ...torresNumeradas.map(c => [c.lat, c.long]),
+    ...(fin ? [[fin.lat, fin.long]] : [])
+  ];
 
   return (
     <div style={{ height: '550px' }}>
@@ -193,6 +185,9 @@ function WeatherMap({ lat, lon, id, file, onMapClick, manualPoint }) {
           </LayersControl.BaseLayer>
         </LayersControl>
 
+        {/* Polilínea del trazado */}
+        <Polyline positions={polylineCoords} pathOptions={{ color: 'orange', weight: 3, opacity: 0.8 }} />
+
         {/* Torre seleccionada */}
         <Marker position={[parsedLat, parsedLon]} icon={redIcon}>
           <Popup>Torre seleccionada: {id}</Popup>
@@ -207,23 +202,9 @@ function WeatherMap({ lat, lon, id, file, onMapClick, manualPoint }) {
           )
         ))}
 
-        {/* Punto seleccionado manualmente */}
-        {manualPoint && (
-          <Marker position={[manualPoint.lat, manualPoint.lon]} icon={greenIcon}>
-            <Popup>
-              <strong>Punto seleccionado</strong><br />
-              📍 {manualPoint.lat.toFixed(4)}, {manualPoint.lon.toFixed(4)}<br />
-              🌡 Promedio: {manualPoint.avg} °C<br />
-              🔻 Mín: {manualPoint.min} °C<br />
-              🔺 Máx: {manualPoint.max} °C
-            </Popup>
-          </Marker>
-        )}
-
         <MapUpdater lat={parsedLat} lon={parsedLon} />
         <ResetViewControl lat={parsedLat} lon={parsedLon} />
         <LegendControl />
-        <ClickHandler onMapClick={onMapClick} />
         <LoadKMLFromFile file={file} />
       </MapContainer>
     </div>
