@@ -1,21 +1,21 @@
 {
   "files": {
-    "main.css": "/visorwebmap/static/css/main.ea338e5a.css",
-    "main.js": "/visorwebmap/static/js/main.58545bd7.js",
+    "main.css": "/visorwebmap/static/css/main.5588ea0a.css",
+    "main.js": "/visorwebmap/static/js/main.b511ea8f.js",
     "static/js/239.534868d0.chunk.js": "/visorwebmap/static/js/239.534868d0.chunk.js",
     "static/js/977.a6059294.chunk.js": "/visorwebmap/static/js/977.a6059294.chunk.js",
     "static/js/455.b09eb063.chunk.js": "/visorwebmap/static/js/455.b09eb063.chunk.js",
     "static/js/453.4bacee15.chunk.js": "/visorwebmap/static/js/453.4bacee15.chunk.js",
     "index.html": "/visorwebmap/index.html",
-    "main.ea338e5a.css.map": "/visorwebmap/static/css/main.ea338e5a.css.map",
-    "main.58545bd7.js.map": "/visorwebmap/static/js/main.58545bd7.js.map",
+    "main.5588ea0a.css.map": "/visorwebmap/static/css/main.5588ea0a.css.map",
+    "main.b511ea8f.js.map": "/visorwebmap/static/js/main.b511ea8f.js.map",
     "239.534868d0.chunk.js.map": "/visorwebmap/static/js/239.534868d0.chunk.js.map",
     "977.a6059294.chunk.js.map": "/visorwebmap/static/js/977.a6059294.chunk.js.map",
     "455.b09eb063.chunk.js.map": "/visorwebmap/static/js/455.b09eb063.chunk.js.map",
     "453.4bacee15.chunk.js.map": "/visorwebmap/static/js/453.4bacee15.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.ea338e5a.css",
-    "static/js/main.58545bd7.js"
+    "static/css/main.5588ea0a.css",
+    "static/js/main.b511ea8f.js"
   ]
 }
