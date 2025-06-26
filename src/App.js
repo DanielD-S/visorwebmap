@@ -12,19 +12,12 @@ function App() {
   const [selectedId, setSelectedId] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
-  const [manualLat, setManualLat] = useState(null);
-  const [manualLon, setManualLon] = useState(null);
   const [endDate, setEndDate] = useState('');
   const [daysBack, setDaysBack] = useState(28);
   const [chartsData, setChartsData] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mode, setMode] = useState('daily');
-
-  function average(arr) {
-    if (!arr || arr.length === 0) return 0;
-    return (arr.reduce((sum, val) => sum + val, 0) / arr.length).toFixed(1);
-  }
 
   useEffect(() => {
     const today = new Date();
@@ -212,15 +205,6 @@ function App() {
             lat={latitude}
             lon={longitude}
             id={selectedId}
-            manualPoint={
-              manualLat && manualLon
-                ? { lat: manualLat, lon: manualLon }
-                : null
-            }
-            onMapClick={(lat, lon) => {
-              setManualLat(lat);
-              setManualLon(lon);
-            }}
           />
           <WeatherCharts chartsData={chartsData} />
         </section>

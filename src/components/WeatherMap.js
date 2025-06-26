@@ -88,9 +88,7 @@ function LegendControl() {
       div.innerHTML = `
         <strong>Leyenda</strong><br />
         <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png" style="vertical-align: middle;" /> Torre seleccionada<br />
-        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres<br />
-        <img src="https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png" style="vertical-align: middle;" /> Punto manual
-      `;
+        <img src="https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png" style="vertical-align: middle;" /> Otras torres<br /> `;
       return div;
     };
     legend.addTo(map);
