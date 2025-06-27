@@ -4,6 +4,9 @@ import React from 'react';
 function WeatherStats({ chartsData }) {
   const format = (n, unit) => `${n.toFixed(1)} ${unit}`;
 
+  // Unidades acumulativas
+  const acumulativas = ['mm', 'MJ/m²'];
+
   return (
     <div className="results-section">
       <h2>Resumen Estadístico</h2>
@@ -21,8 +24,8 @@ function WeatherStats({ chartsData }) {
               <strong>{label}</strong> ({unit}) → 
               Promedio: {format(avg, unit)} | 
               Mín: {format(min, unit)} | 
-              Máx: {format(max, unit)} 
-              {unit === 'mm' && ` | Total: ${format(total, unit)}`}
+              Máx: {format(max, unit)}
+              {acumulativas.includes(unit) && ` | Total: ${format(total, unit)}`}
             </li>
           );
         })}
