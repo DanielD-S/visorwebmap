@@ -48,6 +48,9 @@ const WeatherAlerts = () => {
       chunks.push(coordinates.slice(i, i + chunkSize));
     }
 
+    const sd = new Date(startDate);
+    const ed = new Date(endDate);
+
     for (let index = 0; index < chunks.length; index++) {
       const chunk = chunks[index];
       setProgressMessage(`⏳ Consultando bloque ${index + 1} de ${chunks.length}...`);
@@ -79,7 +82,8 @@ const WeatherAlerts = () => {
             if (data.daily[key]) {
               data.daily[key].forEach((value, i) => {
                 const fecha = time[i];
-                if (value > limit && fecha >= startDate && fecha <= endDate) {
+                const f = new Date(fecha);
+                if (value > limit && f >= sd && f <= ed) {
                   results.push({
                     id: coord.id,
                     nombre: coord.nombre || `Torre ${coord.id}`,
