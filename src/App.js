@@ -3,6 +3,7 @@ import './App.css';
 import 'leaflet-omnivore';
 import JSZip from 'jszip';
 import { kml } from '@tmcw/togeojson';
+import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';
@@ -10,6 +11,7 @@ import WeatherForm from './components/WeatherForm';
 import WeatherCharts from './components/WeatherCharts';
 import WeatherMap from './components/WeatherMap';
 import WeatherStats from './components/WeatherStats';
+import AlertDashboard from './components/AlertDashboard';
 
 function App() {
   const [selectedId, setSelectedId] = useState('');
@@ -42,33 +44,33 @@ function App() {
     const variables = Object.keys(WEATHER_VARIABLES).join(',');
     const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
 
-    console.log("🌐 URL consultada:", url);
-    console.log("📤 Variables solicitadas:", variables);
+    console.log("\ud83c\udf10 URL consultada:", url);
+    console.log("\ud83d\udcc4 Variables solicitadas:", variables);
 
     try {
       const res = await fetch(url);
       const data = await res.json();
 
       if (data && data.daily && data.daily.time) {
-        console.log("📥 Variables recibidas:", Object.keys(data.daily));
+        console.log("\ud83d\udce5 Variables recibidas:", Object.keys(data.daily));
 
         const solicitadas = Object.keys(WEATHER_VARIABLES);
         const recibidas = Object.keys(data.daily);
         const faltantes = solicitadas.filter(v => !recibidas.includes(v));
         if (faltantes.length > 0) {
-          console.warn("⚠️ Variables solicitadas no presentes en la respuesta:", faltantes);
+          console.warn("\u26a0\ufe0f Variables solicitadas no presentes en la respuesta:", faltantes);
         }
 
         const processed = processChartData(data);
         setChartsData(processed);
       } else {
         setChartsData({});
-        setError('No se recibieron datos diarios válidos.');
-        console.error("❌ La respuesta no contiene datos diarios válidos");
+        setError('No se recibieron datos diarios v\u00e1lidos.');
+        console.error("\u274c La respuesta no contiene datos diarios v\u00e1lidos");
       }
     } catch (err) {
       setError('Error al obtener datos diarios.');
-      console.error("❌ Error al obtener datos diarios:", err);
+      console.error("\u274c Error al obtener datos diarios:", err);
     } finally {
       setLoading(false);
     }
@@ -100,7 +102,7 @@ function App() {
         const processed = processHourlyChartData(data);
         setChartsData(processed);
       } else {
-        setError('No se recibieron datos horarios válidos.');
+        setError('No se recibieron datos horarios v\u00e1lidos.');
       }
     } catch (err) {
       setError('Error al obtener datos horarios.');
@@ -174,18 +176,8 @@ function App() {
     }
   };
 
-  return (
-    <div className="container my-4">
-      <div className="text-center mb-3">
-        <img
-          src="https://www.interchilesa.com/wp-content/uploads/2025/03/isa-energia.logo_.png"
-          alt="Logo Interchile"
-          style={{ maxWidth: '240px', height: 'auto' }}
-        />
-      </div>
-
-      <h1 className="text-center mb-4">Visualizador Meteorológico ISA Energía</h1>
-
+  const VisorView = () => (
+    <>
       <div className="form-group text-center">
         <label className="fw-bold">Modo de consulta:</label>
         <select
@@ -241,7 +233,33 @@ function App() {
           <WeatherCharts chartsData={chartsData} mode={mode} />
         </section>
       )}
-    </div>
+    </>
+  );
+
+  return (
+    <Router>
+      <div className="container my-4">
+        <div className="text-center mb-3">
+          <img
+            src="https://www.interchilesa.com/wp-content/uploads/2025/03/isa-energia.logo_.png"
+            alt="Logo Interchile"
+            style={{ maxWidth: '240px', height: 'auto' }}
+          />
+        </div>
+
+        <h1 className="text-center mb-4">Visualizador Meteorológico ISA Energía</h1>
+
+        <div className="text-center mb-3">
+          <Link to="/" className="btn btn-outline-primary me-2">Visor por Torre</Link>
+          <Link to="/alertas" className="btn btn-outline-danger">🔔 Alertas Globales</Link>
+        </div>
+
+        <Routes>
+          <Route path="/" element={<VisorView />} />
+          <Route path="/alertas" element={<AlertDashboard />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
