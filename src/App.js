@@ -42,19 +42,33 @@ function App() {
     const variables = Object.keys(WEATHER_VARIABLES).join(',');
     const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
 
+    console.log("🌐 URL consultada:", url);
+    console.log("📤 Variables solicitadas:", variables);
+
     try {
       const res = await fetch(url);
       const data = await res.json();
 
       if (data && data.daily && data.daily.time) {
+        console.log("📥 Variables recibidas:", Object.keys(data.daily));
+
+        const solicitadas = Object.keys(WEATHER_VARIABLES);
+        const recibidas = Object.keys(data.daily);
+        const faltantes = solicitadas.filter(v => !recibidas.includes(v));
+        if (faltantes.length > 0) {
+          console.warn("⚠️ Variables solicitadas no presentes en la respuesta:", faltantes);
+        }
+
         const processed = processChartData(data);
         setChartsData(processed);
       } else {
         setChartsData({});
         setError('No se recibieron datos diarios válidos.');
+        console.error("❌ La respuesta no contiene datos diarios válidos");
       }
     } catch (err) {
       setError('Error al obtener datos diarios.');
+      console.error("❌ Error al obtener datos diarios:", err);
     } finally {
       setLoading(false);
     }
