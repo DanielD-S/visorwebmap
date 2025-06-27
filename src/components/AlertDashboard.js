@@ -42,7 +42,7 @@ const WeatherAlerts = () => {
     setProgressMessage("Iniciando consulta...");
     const results = [];
 
-    const chunkSize = 30;
+    const chunkSize = 10;
     const chunks = [];
     for (let i = 0; i < coordinates.length; i += chunkSize) {
       chunks.push(coordinates.slice(i, i + chunkSize));
@@ -53,23 +53,37 @@ const WeatherAlerts = () => {
       setProgressMessage(`⏳ Consultando bloque ${index + 1} de ${chunks.length}...`);
 
       await Promise.all(chunk.map(async (coord) => {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.long}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.long}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=America/Santiago`;
 
         try {
           const res = await fetch(url);
-          if (!res.ok) return;
+
+          if (res.status === 429) {
+            console.warn(`⛔ Demasiadas solicitudes para torre ${coord.id}. Intenta nuevamente más tarde.`);
+            return;
+          }
+
+          if (!res.ok) {
+            console.warn(`⚠️ Torre ${coord.id} respondió con estado ${res.status}`);
+            return;
+          }
+
           const data = await res.json();
-          if (!data.daily || !data.daily.time) return;
+          if (!data.daily || !data.daily.time) {
+            console.warn(`⚠️ Datos incompletos en torre ${coord.id}`);
+            return;
+          }
 
           const time = data.daily.time;
           Object.entries(thresholds).forEach(([key, { limit, label, color }]) => {
             if (data.daily[key]) {
               data.daily[key].forEach((value, i) => {
-                if (value > limit) {
+                const fecha = time[i];
+                if (value > limit && fecha >= startDate && fecha <= endDate) {
                   results.push({
                     id: coord.id,
                     nombre: coord.nombre || `Torre ${coord.id}`,
-                    fecha: time[i],
+                    fecha,
                     alerta: label,
                     tipo: key,
                     valor: value,
@@ -102,6 +116,31 @@ const WeatherAlerts = () => {
     severityCount[level] += 1;
   });
 
+  const exportToExcel = () => {
+    const wsData = [['Torre', 'Fecha', 'Tipo de Alerta', 'Valor', 'Severidad']];
+    filteredAlerts.forEach(a => {
+      const level = a.valor > thresholds[a.tipo]?.limit * 1.5 ? 'Alta' : a.valor > thresholds[a.tipo]?.limit * 1.2 ? 'Media' : 'Baja';
+      wsData.push([a.nombre, a.fecha, a.alerta, `${a.valor.toFixed(1)} ${a.unidad}`, level]);
+    });
+    const worksheet = XLSX.utils.aoa_to_sheet(wsData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Alertas');
+    XLSX.writeFile(workbook, `alertas_${filter}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(12);
+    doc.text(`Reporte de Alertas (${filter})`, 15, 15);
+
+    filteredAlerts.forEach((a, i) => {
+      const level = a.valor > thresholds[a.tipo]?.limit * 1.5 ? 'Alta' : a.valor > thresholds[a.tipo]?.limit * 1.2 ? 'Media' : 'Baja';
+      doc.text(`${a.fecha} - ${a.nombre}: ${a.alerta} (${a.valor.toFixed(1)} ${a.unidad}) - Severidad: ${level}`, 15, 30 + i * 7);
+    });
+
+    doc.save(`alertas_${filter}.pdf`);
+  };
+
   return (
     <div className="container my-4">
       <h2 className="mb-4">🔔 Panel de Alertas Meteorológicas</h2>
@@ -133,6 +172,13 @@ const WeatherAlerts = () => {
           </button>
         ))}
       </div>
+
+      {!loading && filteredAlerts.length > 0 && (
+        <div className="mb-3">
+          <button className="btn btn-success me-2" onClick={exportToExcel}>📊 Exportar Excel</button>
+          <button className="btn btn-danger" onClick={exportToPDF}>📄 Exportar PDF</button>
+        </div>
+      )}
 
       {loading && <div className="text-muted">{progressMessage || 'Consultando...'}</div>}
 

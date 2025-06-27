@@ -11,7 +11,7 @@ import WeatherForm from './components/WeatherForm';
 import WeatherCharts from './components/WeatherCharts';
 import WeatherMap from './components/WeatherMap';
 import WeatherStats from './components/WeatherStats';
-import WeatherAlerts from './components/WeatherAlerts';
+import WeatherAlerts from './components/AlertDashboard';
 
 function App() {
   const [selectedId, setSelectedId] = useState('');
