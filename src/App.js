@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import './App.css';
 import 'leaflet-omnivore';
-import { Polyline } from 'react-leaflet';
 import JSZip from 'jszip';
 import { kml } from '@tmcw/togeojson';
 
@@ -10,6 +9,7 @@ import { coordinates } from './data/coordinates';
 import WeatherForm from './components/WeatherForm';
 import WeatherCharts from './components/WeatherCharts';
 import WeatherMap from './components/WeatherMap';
+import WeatherStats from './components/WeatherStats';
 
 function App() {
   const [selectedId, setSelectedId] = useState('');
@@ -21,7 +21,7 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [mode, setMode] = useState('daily');
-  const [file, setFile] = useState(null); // nuevo estado para archivo
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     const today = new Date();
@@ -160,33 +160,29 @@ function App() {
     }
   };
 
-return (
-  <div className="container my-4">
+  return (
+    <div className="container my-4">
+      <div className="text-center mb-3">
+        <img
+          src="https://www.interchilesa.com/wp-content/uploads/2025/03/isa-energia.logo_.png"
+          alt="Logo Interchile"
+          style={{ maxWidth: '240px', height: 'auto' }}
+        />
+      </div>
 
-    {/* Logo de Interchile centrado */}
-    <div className="text-center mb-3">
-      <img
-        src="https://www.interchilesa.com/wp-content/uploads/2025/03/isa-energia.logo_.png"
-        alt="Logo Interchile"
-        style={{ maxWidth: '240px', height: 'auto' }}
-      />
-    </div>
+      <h1 className="text-center mb-4">Visualizador Meteorológico ISA Energía</h1>
 
-    {/* Título principal */}
-    <h1 className="text-center mb-4">Visualizador Meteorológico ISA Energía</h1>
-
-    <div className="form-group text-center">
-      <label className="fw-bold">Modo de consulta:</label>
-      <select
-        className="form-select d-inline w-auto ms-2"
-        value={mode}
-        onChange={(e) => setMode(e.target.value)}
-      >
-        <option value="daily">Diario</option>
-        <option value="hourly">Por hora (últimas 48h)</option>
-      </select>
-    </div>
-
+      <div className="form-group text-center">
+        <label className="fw-bold">Modo de consulta:</label>
+        <select
+          className="form-select d-inline w-auto ms-2"
+          value={mode}
+          onChange={(e) => setMode(e.target.value)}
+        >
+          <option value="daily">Diario</option>
+          <option value="hourly">Por hora (últimas 48h)</option>
+        </select>
+      </div>
 
       <WeatherForm
         selectedId={selectedId}
@@ -226,13 +222,9 @@ return (
       {Object.keys(chartsData).length > 0 && (
         <section className="mt-5">
           <h2 className="mb-3">Resultados</h2>
-          <WeatherMap
-            lat={latitude}
-            lon={longitude}
-            id={selectedId}
-            file={file}
-          />
-          <WeatherCharts chartsData={chartsData} />
+          <WeatherMap lat={latitude} lon={longitude} id={selectedId} file={file} />
+          <WeatherStats chartsData={chartsData} />
+          <WeatherCharts chartsData={chartsData} mode={mode} />
         </section>
       )}
     </div>
