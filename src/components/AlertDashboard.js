@@ -17,46 +17,64 @@ const AlertDashboard = () => {
   const [filter, setFilter] = useState('all');
   const [startDate, setStartDate] = useState(new Date().toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]);
+  const [progressMessage, setProgressMessage] = useState('');
 
   const variables = Object.keys(WEATHER_VARIABLES).join(',');
 
   useEffect(() => {
+    const delay = (ms) => new Promise(res => setTimeout(res, ms));
+
     const fetchAlerts = async () => {
       setLoading(true);
+      setProgressMessage("Iniciando consulta...");
       const results = [];
 
-      await Promise.all(coordinates.map(async (coord) => {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.long}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
+      const chunkSize = 30;
+      const chunks = [];
+      for (let i = 0; i < coordinates.length; i += chunkSize) {
+        chunks.push(coordinates.slice(i, i + chunkSize));
+      }
 
-        try {
-          const res = await fetch(url);
-          const data = await res.json();
-          const time = data?.daily?.time || [];
+      for (let index = 0; index < chunks.length; index++) {
+        const chunk = chunks[index];
+        setProgressMessage(`⏳ Consultando bloque ${index + 1} de ${chunks.length}...`);
 
-          Object.entries(THRESHOLDS).forEach(([key, { limit, label, color }]) => {
-            if (data.daily[key]) {
-              data.daily[key].forEach((value, i) => {
-                if (value > limit) {
-                  results.push({
-                    id: coord.id,
-                    nombre: coord.nombre || `Torre ${coord.id}`,
-                    fecha: time[i],
-                    alerta: label,
-                    tipo: key,
-                    valor: value,
-                    unidad: WEATHER_VARIABLES[key]?.unit || '',
-                    color
-                  });
-                }
-              });
-            }
-          });
-        } catch (error) {
-          console.warn(`Error consultando torre ${coord.id}:`, error.message);
-        }
-      }));
+        await Promise.all(chunk.map(async (coord) => {
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.long}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=auto`;
+
+          try {
+            const res = await fetch(url);
+            const data = await res.json();
+            const time = data?.daily?.time || [];
+
+            Object.entries(THRESHOLDS).forEach(([key, { limit, label, color }]) => {
+              if (data.daily[key]) {
+                data.daily[key].forEach((value, i) => {
+                  if (value > limit) {
+                    results.push({
+                      id: coord.id,
+                      nombre: coord.nombre || `Torre ${coord.id}`,
+                      fecha: time[i],
+                      alerta: label,
+                      tipo: key,
+                      valor: value,
+                      unidad: WEATHER_VARIABLES[key]?.unit || '',
+                      color
+                    });
+                  }
+                });
+              }
+            });
+          } catch (error) {
+            console.warn(`Error en torre ${coord.id}:`, error.message);
+          }
+        }));
+
+        await delay(1500);
+      }
 
       setAlerts(results);
+      setProgressMessage('');
       setLoading(false);
     };
 
@@ -134,7 +152,11 @@ const AlertDashboard = () => {
         <button className="btn btn-danger" onClick={exportToPDF}>📄 Exportar PDF</button>
       </div>
 
-      {loading && <div className="text-muted">Consultando todas las torres...</div>}
+      {loading && (
+        <div className="text-muted">
+          {progressMessage || 'Consultando todas las torres...'}
+        </div>
+      )}
 
       {!loading && filteredAlerts.length === 0 && (
         <div className="alert alert-success">✅ No se detectaron alertas meteorológicas.</div>
