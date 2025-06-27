@@ -3,7 +3,7 @@ import './App.css';
 import 'leaflet-omnivore';
 import JSZip from 'jszip';
 import { kml } from '@tmcw/togeojson';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Link } from 'react-router-dom';
 
 import { WEATHER_VARIABLES } from './data/weatherVariables';
 import { coordinates } from './data/coordinates';
@@ -11,7 +11,7 @@ import WeatherForm from './components/WeatherForm';
 import WeatherCharts from './components/WeatherCharts';
 import WeatherMap from './components/WeatherMap';
 import WeatherStats from './components/WeatherStats';
-import AlertDashboard from './components/AlertDashboard';
+import WeatherAlerts from './components/WeatherAlerts';
 
 function App() {
   const [selectedId, setSelectedId] = useState('');
@@ -256,7 +256,7 @@ function App() {
 
         <Routes>
           <Route path="/" element={<VisorView />} />
-          <Route path="/alertas" element={<AlertDashboard />} />
+          <Route path="/alertas" element={<WeatherAlerts />} />
         </Routes>
       </div>
     </Router>
