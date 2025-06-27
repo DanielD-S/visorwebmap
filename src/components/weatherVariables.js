@@ -1,5 +1,3 @@
-// src/data/weatherVariables.js
-
 export const WEATHER_VARIABLES = {
   temperature_2m_max: {
     label: "Temperatura Máxima",
