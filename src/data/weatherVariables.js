@@ -24,9 +24,14 @@ export const WEATHER_VARIABLES = {
     unit: "km/h",
     color: "rgba(201, 203, 207, 0.8)"
   },
-  uv_index_max: {
-    label: "Índice UV Máximo",
-    unit: "",
-    color: "rgba(255, 159, 243, 0.8)"
+  shortwave_radiation_sum: {
+    label: "Radiación Solar",
+    unit: "MJ/m²",
+    color: "rgba(255, 165, 0, 0.8)"
+  },
+  surface_pressure_mean: {
+    label: "Presión Superficial",
+    unit: "hPa",
+    color: "rgba(100, 100, 255, 0.8)"
   }
 };
