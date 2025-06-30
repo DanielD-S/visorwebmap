@@ -259,6 +259,9 @@ function App() {
           <Route path="/alertas" element={<WeatherAlerts />} />
         </Routes>
       </div>
+       <p className="text-center text-muted mt-4" style={{ fontSize: '14px' }}>
+  Desarrollado por Daniel Díaz usando base desarrollada por Alejandro Zapata
+</p>
     </Router>
   );
 }
