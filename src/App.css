@@ -1,20 +1,19 @@
-/* RESET GLOBAL + GRADIENT BACKGROUND */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+html, body, #root {
+  height: 100%;
 }
 
 body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
   font-family: Arial, sans-serif;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
   color: #2d3748;
-   padding-bottom: 80px; /* <- aquí el espacio para que el dropdown no choque con el footer */
 }
 
 /* CONTENEDOR GENERAL */
 .container {
+  flex: 1; /* Esto hace que crezca para ocupar el espacio disponible */
   max-width: 1200px;
   margin: 20px auto;
   background: rgba(255, 255, 255, 0.95);
