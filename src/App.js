@@ -268,7 +268,7 @@ function App() {
           <Route path="/alertas" element={<WeatherAlerts />} />
         </Routes>
       </div>
-      <footer className="app-footer">
+      <footer className="footer-container">
   © 2025 ISA Energía - Visor Meteorológico. Desarrollado por Daniel Díaz Santander & Luis Alejandro Zapata.
 </footer>
 
