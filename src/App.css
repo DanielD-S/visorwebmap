@@ -10,6 +10,7 @@ body {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   min-height: 100vh;
   color: #2d3748;
+   padding-bottom: 80px; /* <- aquí el espacio para que el dropdown no choque con el footer */
 }
 
 /* CONTENEDOR GENERAL */
