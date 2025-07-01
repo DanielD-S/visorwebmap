@@ -17,8 +17,6 @@ const WeatherAlerts = () => {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
   const [progressMessage, setProgressMessage] = useState('');
 
   const thresholds = DEFAULT_THRESHOLDS;
@@ -27,45 +25,29 @@ const WeatherAlerts = () => {
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
   const handleFetchAlerts = async () => {
-    if (!startDate || !endDate) {
-      alert('Por favor, selecciona ambas fechas.');
-      return;
-    }
-
-    const diffDays = (new Date(endDate) - new Date(startDate)) / (1000 * 3600 * 24);
-    if (diffDays > 7) {
-      alert('El rango máximo permitido es de 7 días.');
-      return;
-    }
-
     setLoading(true);
     setProgressMessage("Iniciando consulta...");
     const results = [];
 
-    const chunkSize = 10;
+    const chunkSize = 3; // para evitar el 429
     const chunks = [];
     for (let i = 0; i < coordinates.length; i += chunkSize) {
       chunks.push(coordinates.slice(i, i + chunkSize));
     }
-
-    const sd = new Date(startDate);
-    const ed = new Date(endDate);
 
     for (let index = 0; index < chunks.length; index++) {
       const chunk = chunks[index];
       setProgressMessage(`⏳ Consultando bloque ${index + 1} de ${chunks.length}...`);
 
       await Promise.all(chunk.map(async (coord) => {
-        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.long}&start_date=${startDate}&end_date=${endDate}&daily=${variables}&timezone=America/Santiago`;
+        const url = `https://api.open-meteo.com/v1/forecast?latitude=${coord.lat}&longitude=${coord.long}&daily=${variables}&forecast_days=5&timezone=America/Santiago`;
 
         try {
           const res = await fetch(url);
-
           if (res.status === 429) {
             console.warn(`⛔ Demasiadas solicitudes para torre ${coord.id}. Intenta nuevamente más tarde.`);
             return;
           }
-
           if (!res.ok) {
             console.warn(`⚠️ Torre ${coord.id} respondió con estado ${res.status}`);
             return;
@@ -82,8 +64,7 @@ const WeatherAlerts = () => {
             if (data.daily[key]) {
               data.daily[key].forEach((value, i) => {
                 const fecha = time[i];
-                const f = new Date(fecha);
-                if (value > limit && f >= sd && f <= ed) {
+                if (value > limit) {
                   results.push({
                     id: coord.id,
                     nombre: coord.nombre || `Torre ${coord.id}`,
@@ -98,12 +79,13 @@ const WeatherAlerts = () => {
               });
             }
           });
+
         } catch (error) {
           console.warn(`Error en torre ${coord.id}:`, error.message);
         }
       }));
 
-      await delay(1500);
+      await delay(3000); // pequeño delay para evitar throttling
     }
 
     setAlerts(results);
@@ -136,42 +118,28 @@ const WeatherAlerts = () => {
     const doc = new jsPDF();
     doc.setFontSize(12);
     doc.text(`Reporte de Alertas (${filter})`, 15, 15);
-
     filteredAlerts.forEach((a, i) => {
       const level = a.valor > thresholds[a.tipo]?.limit * 1.5 ? 'Alta' : a.valor > thresholds[a.tipo]?.limit * 1.2 ? 'Media' : 'Baja';
       doc.text(`${a.fecha} - ${a.nombre}: ${a.alerta} (${a.valor.toFixed(1)} ${a.unidad}) - Severidad: ${level}`, 15, 30 + i * 7);
     });
-
     doc.save(`alertas_${filter}.pdf`);
   };
 
   return (
     <div className="container my-4">
-      <h2 className="mb-4">🔔 Panel de Alertas Meteorológicas</h2>
+      <h2 className="mb-4">🔔 Panel de Alertas Meteorológicas (Próximos 5 días)</h2>
 
       <div className="mb-3">
-        <strong>Resumen de Severidad:</strong>{' '}
-        <span className="badge bg-danger me-2">Alta: {severityCount.Alta}</span>
-        <span className="badge bg-warning text-dark me-2">Media: {severityCount.Media}</span>
-        <span className="badge bg-info text-dark">Baja: {severityCount.Baja}</span>
-      </div>
-
-      <div className="mb-3">
-        <strong>Rango de fechas:</strong>{' '}
-        <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="me-2" />
-        <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-        <button className="btn btn-primary ms-2" onClick={handleFetchAlerts} disabled={loading}>Consultar alertas</button>
+        <button className="btn btn-primary" onClick={handleFetchAlerts} disabled={loading}>
+          {loading ? 'Consultando...' : 'Consultar alertas'}
+        </button>
       </div>
 
       <div className="mb-3">
         <strong>Filtrar por tipo:</strong>{' '}
         <button className="btn btn-sm btn-outline-secondary me-2" onClick={() => setFilter('all')}>Todas</button>
         {Object.entries(thresholds).map(([key, val]) => (
-          <button
-            key={key}
-            className="btn btn-sm btn-outline-primary me-2"
-            onClick={() => setFilter(key)}
-          >
+          <button key={key} className="btn btn-sm btn-outline-primary me-2" onClick={() => setFilter(key)}>
             {val.color} {val.label}
           </button>
         ))}
@@ -183,6 +151,13 @@ const WeatherAlerts = () => {
           <button className="btn btn-danger" onClick={exportToPDF}>📄 Exportar PDF</button>
         </div>
       )}
+
+      <div className="mb-3">
+        <strong>Resumen:</strong>{' '}
+        <span className="badge bg-danger me-2">Alta: {severityCount.Alta}</span>
+        <span className="badge bg-warning text-dark me-2">Media: {severityCount.Media}</span>
+        <span className="badge bg-info text-dark">Baja: {severityCount.Baja}</span>
+      </div>
 
       {loading && <div className="text-muted">{progressMessage || 'Consultando...'}</div>}
 

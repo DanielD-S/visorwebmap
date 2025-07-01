@@ -1,3 +1,29 @@
+/* RESET y gradiente global */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  color: #2d3748;
+}
+
+/* CONTENEDOR con estilo del z-meteo */
+.control-panel {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* TU GRID DE CHARTS */
 .charts-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
@@ -5,16 +31,19 @@
   margin-top: 30px;
 }
 
+/* TARJETA DE CADA GRÁFICO */
 .chart-wrapper {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 20px;
   padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
+/* TOOLBAR y BOTONES */
 .chart-toolbar {
   display: flex;
   justify-content: space-between;
@@ -29,10 +58,54 @@
   color: #7f8c8d;
 }
 
+.chart-toolbar .btn {
+  position: relative;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.chart-toolbar .btn:hover {
+  transform: translateY(-1px);
+  background-color: #f0f0f0;
+}
+
+/* BOTÓN estilo z-meteo */
+.btn-generate {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+}
+
+/* TOOLTIP */
+.chart-toolbar .btn[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 120%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 9999;
+}
+
+.chart-toolbar .btn[data-tooltip]:hover::after {
+  opacity: 1;
+}
+
+/* CANVAS ANIMACIÓN */
 .chart-canvas {
   width: 100%;
   height: 300px;
   position: relative;
+  animation: fadeInChart 0.5s ease-out;
 }
 
 .chart-canvas canvas {
@@ -40,7 +113,7 @@
   height: 100% !important;
 }
 
-/* Responsive para pantallas pequeñas */
+/* RESPONSIVE */
 @media (max-width: 768px) {
   .chart-toolbar {
     flex-direction: column;
@@ -66,39 +139,7 @@
     height: 260px;
   }
 }
-.chart-toolbar .btn {
-  position: relative;
-  transition: background-color 0.2s ease, transform 0.2s ease;
-}
 
-.chart-toolbar .btn:hover {
-  transform: translateY(-1px);
-  background-color: #f0f0f0;
-}
-
-/* Tooltip básico */
-.chart-toolbar .btn[data-tooltip]::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  bottom: 120%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.75);
-  color: #fff;
-  padding: 6px 8px;
-  font-size: 12px;
-  border-radius: 4px;
-  white-space: nowrap;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-  z-index: 9999;
-}
-
-.chart-toolbar .btn[data-tooltip]:hover::after {
-  opacity: 1;
-}
-/* Animación para el canvas de Chart.js */
 @keyframes fadeInChart {
   from {
     opacity: 0;
@@ -109,8 +150,48 @@
     transform: translateY(0);
   }
 }
-
-.chart-canvas {
-  animation: fadeInChart 0.5s ease-out;
+/* BOTONES EXPORTACIÓN INDIVIDUAL */
+.chart-toolbar .btn-csv {
+  background: linear-gradient(135deg, #7f7fd5, #86a8e7);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: none;
 }
 
+.chart-toolbar .btn-excel {
+  background: linear-gradient(135deg, #11998e, #38ef7d);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: none;
+}
+
+.chart-toolbar .btn-png {
+  background: linear-gradient(135deg, #ff9966, #ff5e62);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: none;
+}
+
+.chart-toolbar .btn-pdf {
+  background: linear-gradient(135deg, #e53935, #e35d5b);
+  color: white;
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border: none;
+}
+
+/* HOVER & TRANSICIÓN */
+.chart-toolbar .btn-csv:hover,
+.chart-toolbar .btn-excel:hover,
+.chart-toolbar .btn-png:hover,
+.chart-toolbar .btn-pdf:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}

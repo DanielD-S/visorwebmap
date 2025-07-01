@@ -18,7 +18,6 @@ function exportSingleChartCSV(dataset) {
   for (let i = 0; i < dataset.labels.length; i++) {
     rows.push([dataset.labels[i], dataset.data[i]]);
   }
-
   const csvContent = rows.map(r => r.join(',')).join('\n');
   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
@@ -34,7 +33,6 @@ function exportSingleChartExcel(dataset) {
   for (let i = 0; i < dataset.labels.length; i++) {
     wsData.push([dataset.labels[i], dataset.data[i]]);
   }
-
   const worksheet = XLSX.utils.aoa_to_sheet(wsData);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, 'Datos');
@@ -69,7 +67,6 @@ function WeatherCharts({ chartsData, mode }) {
     Object.entries(chartsData).forEach(([key, dataset]) => {
       const canvasId = `chart-${key}`;
       const canvas = document.getElementById(canvasId);
-
       if (canvas) {
         const existingChart = Chart.getChart(canvasId);
         if (existingChart) existingChart.destroy();
@@ -100,22 +97,11 @@ function WeatherCharts({ chartsData, mode }) {
             scales: {
               y: {
                 beginAtZero: true,
-                title: {
-                  display: true,
-                  text: dataset.config.unit
-                }
+                title: { display: true, text: dataset.config.unit }
               },
               x: {
-                ticks: {
-                  maxRotation: 45,
-                  minRotation: 45,
-                  autoSkip: true,
-                  maxTicksLimit: 24
-                },
-                title: {
-                  display: true,
-                  text: mode === 'hourly' ? 'Fecha y hora' : 'Fecha'
-                }
+                ticks: { maxRotation: 45, minRotation: 45, autoSkip: true, maxTicksLimit: 24 },
+                title: { display: true, text: mode === 'hourly' ? 'Fecha y hora' : 'Fecha' }
               }
             }
           }
@@ -127,53 +113,35 @@ function WeatherCharts({ chartsData, mode }) {
   if (!chartsData || Object.keys(chartsData).length === 0) return null;
 
   return (
-    <div className="charts-container">
-      {Object.entries(chartsData).map(([variable, dataset]) => {
-        const stats = computeStats(dataset.data);
-        const canvasId = `chart-${variable}`;
+    <div className="control-panel">
+      <div className="charts-container">
+        {Object.entries(chartsData).map(([variable, dataset]) => {
+          const stats = computeStats(dataset.data);
+          const canvasId = `chart-${variable}`;
 
-        return (
-          <div className="chart-wrapper" key={variable}>
-            <div className="chart-toolbar">
-              <div className="text-muted small">
-                <strong>{dataset.config.label}</strong><br />
-                Promedio: {stats.avg.toFixed(1)} {dataset.config.unit} | Mín: {stats.min} | Máx: {stats.max}
-              </div>
-
-              <div className="btn-group btn-group-sm">
-  <button
-    onClick={() => exportSingleChartCSV(dataset)}
-    className="btn btn-outline-secondary"
-    data-tooltip="Exportar como CSV"
-  >📄 CSV</button>
-
-  <button
-    onClick={() => exportSingleChartExcel(dataset)}
-    className="btn btn-outline-success"
-    data-tooltip="Exportar como Excel"
-  >📊 Excel</button>
-
-  <button
-    onClick={() => exportChartAsImage(canvasId, dataset.config.label)}
-    className="btn btn-outline-info"
-    data-tooltip="Guardar imagen PNG"
-  >🖼 PNG</button>
-
-  <button
-    onClick={() => exportChartAsPDF(canvasId, dataset.config.label)}
-    className="btn btn-outline-danger"
-    data-tooltip="Descargar como PDF"
-  >📄 PDF</button>
+          return (
+            <div className="chart-wrapper" key={variable}>
+              <div className="chart-toolbar">
+                <div className="text-muted small">
+                  <strong>{dataset.config.label}</strong><br />
+                  Promedio: {stats.avg.toFixed(1)} {dataset.config.unit} | Mín: {stats.min} | Máx: {stats.max}
+                </div>
+               
+<div className="btn-group btn-group-sm">
+  <button onClick={() => exportSingleChartCSV(dataset)} className="btn btn-csv" data-tooltip="Exportar CSV">📄 CSV</button>
+  <button onClick={() => exportSingleChartExcel(dataset)} className="btn btn-excel" data-tooltip="Exportar Excel">📊 Excel</button>
+  <button onClick={() => exportChartAsImage(canvasId, dataset.config.label)} className="btn btn-png" data-tooltip="Guardar PNG">🖼 PNG</button>
+  <button onClick={() => exportChartAsPDF(canvasId, dataset.config.label)} className="btn btn-pdf" data-tooltip="Descargar PDF">📄 PDF</button>
 </div>
 
+              </div>
+              <div className="chart-canvas">
+                <canvas id={canvasId}></canvas>
+              </div>
             </div>
-
-            <div className="chart-canvas">
-              <canvas id={canvasId}></canvas>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }
